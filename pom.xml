@@ -44,7 +44,6 @@
         <developer>
             <name>wangqingwei</name> <!-- 改对 -->
         </developer>
-
     </developers>
 
     <dependencyManagement>
