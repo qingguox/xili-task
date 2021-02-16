@@ -10,12 +10,28 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>xili-task-runner</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
+
+        <!-- component -->
+        <dependency>
+            <groupId>com.xlg</groupId>
+            <artifactId>xili-task-component</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${boot.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -18,6 +18,13 @@
     <name>xili-task</name>
     <description>毕业设计</description>
 
+    <scm>
+        <connection>scm:git:git@github.com:1367379258/xili-task.git</connection>
+        <developerConnection>scm:git:git@github.com:1367379258/xili-task.git
+        </developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
         <java.version>1.8</java.version>
         <revision>1.0.0-SNAPSHOT</revision>
@@ -29,6 +36,7 @@
         <log4j.version>1.2.17</log4j.version>
         <mysql.version>5.1.29</mysql.version>
         <druid.version>1.1.20</druid.version>
+        <boot.version>2.2.2.RELEASE</boot.version>
     </properties>
 
     <!-- 开发人员说明 -->
@@ -56,7 +64,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>2.2.2.RELEASE</version>
+                <version>${boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -99,10 +107,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <fork>true</fork>
-                    <addResources>true</addResources>
-                </configuration>
             </plugin>
         </plugins>
     </build>
