@@ -2,6 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.2.2.RELEASE</version>
+        <relativePath/>
+    </parent>
+
     <modules>
         <module>xili-task-sdk</module>
         <module>xili-task-api</module>
@@ -12,7 +20,7 @@
 
     <groupId>com.xlg</groupId>
     <artifactId>xili-task</artifactId>
-    <version>${revision}</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>xili-task</name>
@@ -51,21 +59,13 @@
             <dependency>
                 <groupId>com.xlg</groupId>
                 <artifactId>xili-task-component</artifactId>
-                <version>${revision}</version>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.xlg</groupId>
                 <artifactId>xili-task-sdk</artifactId>
-                <version>${revision}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
@@ -103,11 +103,11 @@
 
     <build>
         <plugins>
+            <!-- 发布时必须依赖的插件 -->
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
-
 </project>

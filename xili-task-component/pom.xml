@@ -5,16 +5,11 @@
     <parent>
         <artifactId>xili-task</artifactId>
         <groupId>com.xlg</groupId>
-        <version>${revision}</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>xili-task-component</artifactId>
-    <packaging>jar</packaging>
-
-    <properties>
-        <vavr.version>0.10.0</vavr.version>
-    </properties>
 
     <dependencies>
         <dependency>
@@ -27,11 +22,6 @@
             <artifactId>xili-task-sdk</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>io.vavr</groupId>
-            <artifactId>vavr</artifactId>
-            <version>${vavr.version}</version>
-        </dependency>
         <!-- test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -39,6 +29,19 @@
             <version>${boot.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 下面这段 sdk 不用增加，只有 component/api/runner 需要增加，避免 deploy 出去 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
