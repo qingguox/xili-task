@@ -1,0 +1,283 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>任务首页 - 科帮网</title>
+    <meta name="author" content="小柒2012"/>
+    <meta name="site" content="https://blog.52itstyle.com"/>
+    <link rel="stylesheet" th:href="@{/iview/iview.css}">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script th:src="@{/libs/jquery-3.2.1.min.js}" type="text/javascript"></script>
+    <script th:src="@{/libs/vue.min.js}" type="text/javascript"></script>
+    <script th:src="@{/layer/layer.js}" type="text/javascript"></script>
+    <script th:src="@{/iview/iview.min.js}" type="text/javascript"></script>
+    <script th:src="@{/common.js}" type="text/javascript"></script>
+
+    <style type="text/css">
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="app" style="height: 80%" v-cloak>
+    <div style="margin-bottom: 6px;margin: 30px; ">
+        <b>学生姓名：</b>
+        <i-input v-model="name" placeholder="请输入姓名，支持模糊搜索" style="width: 200px"></i-input>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <b>工种：</b>
+        <i-select v-model="status" style="width: 80px">
+            <i-option v-for="option in options" v-bind:value="option.value">
+                {{ option.desc }}
+            </i-option>
+        </i-select>
+        <span>Selected: {{ status }}</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <i-button type="primary" @click="search()" icon="ios-search">查询</i-button>&nbsp;&nbsp;
+        <i-button type="primary" @click="create()" icon="ios-reload">导入学生/老师数据</i-button>&nbsp;&nbsp;
+        <i-button type="primary" @click="taskExport()" icon="ios-reload">导出列表</i-button>&nbsp;&nbsp;
+    </div>
+    <div style="margin-bottom: 6px;margin: 30px">
+        <template>
+            <i-table border :content="self" :columns="tableTitle" :data="JobData"></i-table>
+            <br>
+            <!-- 待实现分页功能 -->
+            <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
+        </template>
+    </div>
+</div>
+
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            name: "",
+            status: '',
+            taskName: "",
+            taskId: '',
+            status: 0,
+            creator: "",
+            startTime: "",
+            endTime: "",
+            taskDesc: "",
+            pageNo: 1,
+            pageSize: 10,
+            time: [],
+            JobData: [],
+            form: {
+                status: '',
+                dynamicItem: [],
+            },
+            options: [],
+            tableTitle: [{
+                key: "id",
+                title: "id"
+            }, {
+                key: "userId",
+                title: "工号"
+            }, {
+                key: "name",
+                title: "姓名"
+            }, {
+                key: "age",
+                title: "年龄"
+            }, {
+                key: "sex",
+                title: "性别"
+            }, {
+                key: "type",
+                title: "工种"
+            }, {
+                key: "phone",
+                title: "电话"
+            }, {
+                key: "email",
+                title: "邮箱"
+            }, {
+                title: '操作',
+                key: 'action',
+                width: 400,
+                align: 'left',
+                render: function (h, params) {
+                    var functionList = [];
+                    //修改
+                    var edit = h('Button', {
+                        props: {
+                            type: 'primary',
+                            icon: 'edit'
+                        },
+                        style: {
+                            marginRight: '8px'
+                        },
+                        on: {
+                            click: function () {
+                                vm.edit(params.row);
+                            }
+                        }
+                    }, '修改');
+                    functionList.push(edit);
+                    //下线
+                    var remove = h('Button', {
+                        props: {
+                            type: 'primary',
+                            icon: 'close'
+                        },
+                        style: {
+                            marginRight: '8px'
+                        },
+                        on: {
+                            click: function () {
+                                vm.remove(params.row.id);
+                            }
+                        }
+                    }, '删除');
+                    functionList.push(remove);
+                    // 返回方法集合
+                    return h('div', functionList);
+                }
+            }]
+
+        },
+        methods: {
+            click: function () {
+                console.log(vm.time[0]);
+                console.log(vm.time[1]);
+            },
+            role: function () {
+                $.ajax({
+                    url: "../manager/status",
+                    type: "post",
+                    data: {
+                    },
+                    success: function (result) {
+                        vm.options = result.msg;
+                    }
+                });
+            },
+            //搜索
+            search: function () {
+                var json = {};
+                json = {
+                    "name": vm.name,
+                    "status": vm.status,
+                    'pageNo': this.pageNo,
+                    'pageSize': this.pageSize
+                }
+                $.ajax({
+                    url:"../manager/search",
+                    type:"post",
+                    dataType:'json',
+                    contentType:'application/json;charset=UTF-8',
+                    data: JSON.stringify(json),
+                    success: function (result) {
+                        vm.JobData = result.msg;
+                    }
+                });
+            },
+            // 导出数据
+            taskExport() {
+                return axios.get('../manager/export', {
+                    params: {
+                        "name": vm.name,
+                        "status": vm.status,
+                        'pageNo': this.pageNo,
+                        'pageSize': this.pageSize
+                    },
+                    responseType: 'blob',
+                }).then((res) => {
+                    const link = document.createElement('a')
+                    let blob = new Blob([res.data], {type: 'application/vnd.ms-excel'})
+                    link.style.display = 'none'
+                    link.href = URL.createObjectURL(blob)
+
+                    let f = res.headers['content-disposition']
+                    let w = f.substring(20, f.length);
+                    alert(w);
+                    // link.download = res.headers['content-disposition'] //下载后文件名
+                    link.download = w //下载的文件名
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                }).catch(error => {
+                    this.$Notice.error({
+                        title: '错误',
+                        desc: '网络连接错误'
+                    })
+                    console.log(error)
+                })
+            },
+            // 添加页面
+            create: function () {
+                dialogOpen({
+                    title: '新增',
+                    url: 'add.html',
+                    scroll: true,
+                    width: '1000px',
+                    height: '1000px',
+                    success: function (iframeId) {
+
+                    },
+                    yes: function (iframeId) {
+                        top.frames[iframeId].vm.acceptClick();
+                    },
+                });
+            },
+            //任务列表(自行实现分页)
+            list: function () {
+                $.ajax({
+                    url: "../manager/list",
+                    type: "post",
+                    data: {'time': (new Date()).toString(), 'pageNo': this.pageNo, 'pageSize': this.pageSize},
+                    success: function (result) {
+                        vm.JobData = result.msg;
+                    }
+                });
+            },
+            edit: function (task) {
+                dialogOpen({
+                    title: '修改',
+                    url: 'edit.html',
+                    scroll: true,
+                    width: '1000px',
+                    height: '1000px',
+                    success: function (iframeId) {
+                        top.frames[iframeId].vm.formQuartz = task;
+                    },
+                    yes: function (iframeId) {
+                        top.frames[iframeId].vm.acceptClick();
+                    },
+                });
+            },
+            //移除任务
+            remove: function (id) {
+                var that = this;
+                top.layer.confirm('确定要移除吗？', {
+                    btn: ['确定', '取消'] //按钮
+                }, function () {
+                    $.ajax({
+                        url: "../manager/remove",
+                        type: "post",
+                        data: {'time': (new Date()).getTime(), 'id': id},
+                        success: function (result) {
+                            if (result.code == "200") {
+                                top.layer.msg('移除成功', {icon: 1});
+                                window.setTimeout(that.list(), 1500);
+                            }
+                        }
+                    });
+                }, function () {
+
+                });
+            }
+        },
+        created: function () {
+            this.list();
+            this.role();
+        }
+    });
+</script>
+</body>
+</html>

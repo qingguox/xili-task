@@ -1,0 +1,464 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>任务首页 - 科帮网</title>
+    <meta name="author" content="小柒2012"/>
+    <meta name="site" content="https://blog.52itstyle.com"/>
+    <link rel="stylesheet" th:href="@{/iview/iview.css}">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script th:src="@{/libs/jquery-3.2.1.min.js}" type="text/javascript"></script>
+    <script th:src="@{/libs/vue.min.js}" type="text/javascript"></script>
+    <script th:src="@{/layer/layer.js}" type="text/javascript"></script>
+    <script th:src="@{/iview/iview.min.js}" type="text/javascript"></script>
+    <script th:src="@{/common.js}" type="text/javascript"></script>
+
+    <style type="text/css">
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="app" style="height: 80%" v-cloak>
+    <div style="margin-bottom: 6px;margin: 30px; ">
+        <b>任务名称：</b>
+        <i-input v-model="taskName" placeholder="请输入任务名称，支持模糊搜索" style="width: 200px"></i-input>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <b>任务ID：</b>
+        <i-input v-model="taskId" placeholder="请输入任务ID" style="width: 180px"></i-input>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <b>任务状态：</b>
+        <i-select v-model="status" style="width: 200px">
+            <i-option v-for="option in options" v-bind:value="option.value">
+                {{ option.desc }}
+            </i-option>
+        </i-select>
+        <span>Selected: {{ status }}</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+        <b>创建人：</b>
+        <i-input v-model="creator" placeholder="请输入创建人姓名小写" style="width: 180px"></i-input>
+        <br/><br/>
+        <b>任务备注：</b>
+        <i-input v-model="taskDesc" placeholder="请输入任务备注，支持模糊搜索" style="width: 200px"></i-input>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <b>时间段：</b>
+        <template>
+                <el-date-picker
+                        v-model="time"
+                        type="datetimerange"
+                        range-separator="至"
+                        format="yyyy-MM-dd HH:mm:ss"
+                        value-format="yyyy-MM-dd HH:mm:ss"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期">
+                </el-date-picker>
+        </template>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <i-button type="primary" @click="search()" icon="ios-search">查询</i-button>&nbsp;&nbsp;
+        <div th:if="${session.role} != 2">
+            <i-button type="primary" @click="create()" icon="ios-reload">创建任务</i-button>&nbsp;&nbsp;
+            <i-button type="primary" @click="taskExport()" icon="ios-reload">导出列表</i-button>&nbsp;&nbsp;
+        </div>
+        <i-button type="primary" @click="click()">打印选择的时间</i-button>
+    </div>
+    <div style="margin-bottom: 6px;margin: 30px">
+        <div th:if="${session.role} != 2">
+            <template>
+                <i-table border :content="self" :columns="tableTitle" :data="JobData"></i-table>
+                <br>
+                <!-- 待实现分页功能 -->
+                <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
+            </template>
+        </div>
+        <div>
+            <template>
+                <i-table border :content="self" :columns="tableTitleStudent" :data="JobData"></i-table>
+                <br>
+                <!-- 待实现分页功能 -->
+                <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
+            </template>
+        </div>
+    </div>
+</div>
+
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            taskName: "",
+            taskId: '',
+            status: 0,
+            creator: "",
+            startTime: "",
+            endTime: "",
+            taskDesc: "",
+            pageNo: 1,
+            pageSize: 10,
+            time : [],
+            JobData: [],
+            form: {
+                status : '',
+                dynamicItem : [],
+            },
+            options: [
+            ],
+            tableTitle: [{
+                key: "taskId",
+                title: "任务ID"
+            }, {
+                key: "taskName",
+                title: "任务名"
+            }, {
+                key: "startTime",
+                title: "开始时间"
+            }, {
+                key: "endTime",
+                title: "结束时间"
+            }, {
+                key: "status",
+                title: "任务状态"
+            }, {
+                key: "createTime",
+                title: "创建时间"
+            }, {
+                key: "taskDesc",
+                title: "任务备注"
+            }, {
+                key: "creator",
+                title: "创建人"
+            }, {
+                title: '操作',
+                key: 'action',
+                width: 400,
+                align: 'left',
+                render: function (h, params) {
+                    var functionList = [];
+                    //修改
+                    var edit = h('Button', {
+                        props: {
+                            type: 'primary',
+                            icon: 'edit'
+                        },
+                        style: {
+                            marginRight: '8px'
+                        },
+                        on: {
+                            click: function () {
+                                vm.edit(params.row);
+                            }
+                        }
+                    }, '修改');
+                    functionList.push(edit);
+                    //下线
+                    var remove = h('Button', {
+                        props: {
+                            type: 'primary',
+                            icon: 'close'
+                        },
+                        style: {
+                            marginRight: '8px'
+                        },
+                        on: {
+                            click: function () {
+                                vm.remove(params.row.taskId);
+                            }
+                        }
+                    }, '下线');
+                    functionList.push(remove);
+                    //查看
+                    var touch = h('Button', {
+                        props: {
+                            type: 'primary',
+                            icon: 'ios-reload'
+                        },
+                        style: {
+                            marginRight: '8px'
+                        },
+                        on: {
+                            click: function () {
+                                vm.touch(params.row);
+                            }
+                        }
+                    }, '查看');
+                    functionList.push(touch);
+                    //复制
+                    var copy = h('Button', {
+                        props: {
+                            type: 'primary',
+                            icon: 'ios-pause'
+                        },
+                        style: {
+                            marginRight: '8px'
+                        },
+                        on: {
+                            click: function () {
+                                vm.copy(params.row);
+                            }
+                        }
+                    }, '复制');
+                    functionList.push(copy);
+                    // 返回方法集合
+                    return h('div', functionList);
+                }
+            }],
+            tableTitleStudent: [{
+                key: "taskId",
+                title: "任务ID"
+            }, {
+                key: "taskName",
+                title: "任务名"
+            }, {
+                key: "startTime",
+                title: "开始时间"
+            }, {
+                key: "endTime",
+                title: "结束时间"
+            }, {
+                key: "status",
+                title: "任务状态"
+            }, {
+                key: "createTime",
+                title: "创建时间"
+            }, {
+                key: "taskDesc",
+                title: "任务备注"
+            }, {
+                key: "creator",
+                title: "创建人"
+            }, {
+                title: '操作',
+                key: 'action',
+                width: 400,
+                align: 'left',
+                render: function (h, params) {
+                    var functionList = [];
+                    //查看
+                    var touch = h('Button', {
+                        props: {
+                            type: 'primary',
+                            icon: 'ios-reload'
+                        },
+                        style: {
+                            marginRight: '8px'
+                        },
+                        on: {
+                            click: function () {
+                                vm.touch(params.row);
+                            }
+                        }
+                    }, '查看');
+                    functionList.push(touch);
+                    // 返回方法集合
+                    return h('div', functionList);
+                }
+            }],
+        },
+        methods: {
+            click: function () {
+                console.log(vm.time[0]);
+                console.log(vm.time[1]);
+            },
+            //搜索
+            search: function () {
+                let taskId = this.taskId;
+                let taskName = this.taskName;
+                let status = this.status;
+                let creator = this.creator;
+                let taskDesc = this.taskDesc;
+                if(taskId==""){
+                    taskId = 0
+                }
+                if(taskName==""){
+                    taskName = ""
+                }
+                if(status==""){
+                    status = 0
+                }
+                if(creator==""){
+                    creator = ""
+                }
+                if(taskDesc==""){
+                    taskDesc = ""
+                }
+                let startTime = new Date(this.time[0]).getTime();
+                let endTime = new Date(this.time[1]).getTime();
+                if (Object.keys(startTime).length==0) {
+                    startTime = 0
+                }
+                if (Object.keys(endTime).length==0) {
+                    endTime = 0
+                }
+                $.ajax({
+                    url: "../task/search",
+                    type: "post",
+                    data: {
+                        'taskId': taskId,
+                        "taskName": taskName,
+                        'status': status,
+                        "creator": creator,
+                        "taskDesc": taskDesc,
+                        "startTime": startTime,
+                        "endTime": endTime,
+                        'pageSize': this.pageSize,
+                        'pageNo': this.pageNo,
+                    },
+                    success: function (result) {
+                        vm.JobData = result.msg;
+                    }
+                });
+            },
+            // 任务状态枚举
+            taskStatus: function () {
+                $.ajax({
+                    url: "../task/status",
+                    type: "post",
+                    data: {
+                    },
+                    success: function (result) {
+                        vm.options = result.msg;
+                    }
+                });
+            },
+            // 任务列表导出
+            taskExport: function () {
+                alert("任务列表到处")
+                $.ajax({
+                    url: "../task/export",
+                    type: "post",
+                    data: {'time': (new Date()).toString(), 'taskId': this.taskId},
+                    success: function (result) {
+                        if (result.code == "0") {
+                            vm.$Notice.success({
+                                desc: '查看任务成功'
+                            });
+                            vm.list();
+                        }
+                    }
+                });
+            },
+            //新建任务(略简单)
+            create: function () {
+                dialogOpen({
+                    title: '新增',
+                    url: 'task/add.html',
+                    scroll: true,
+                    width: '1000px',
+                    height: '1000px',
+                    success: function (iframeId) {
+
+                    },
+                    yes: function (iframeId) {
+                        top.frames[iframeId].vm.acceptClick();
+                    },
+                });
+            },
+            //任务列表(自行实现分页)
+            list: function () {
+                $.ajax({
+                    url: "../task/list",
+                    type: "post",
+                    data: {'time': (new Date()).toString(), 'pageNo': this.pageNo, 'pageSize': this.pageSize},
+                    success: function (result) {
+                        vm.JobData = result.msg;
+                    }
+                });
+            },
+            //查看任务
+            touch: function (task) {
+                dialogOpen({
+                    title: '查看',
+                    url: 'task/touch.html',
+                    scroll: true,
+                    width: '1000px',
+                    height: '1000px',
+                    success: function (iframeId) {
+                        //alert(JSON.stringify(task))
+                        top.frames[iframeId].vm.formQuartz.taskDesc = task.taskDesc;
+                        top.frames[iframeId].vm.formQuartz.taskId = task.taskId;
+                        top.frames[iframeId].vm.formQuartz.taskName = task.taskName;
+                        top.frames[iframeId].vm.formQuartz.time = [task.startTime, task.endTime];
+                        top.frames[iframeId].vm.formQuartz.file = task.file;
+                        top.frames[iframeId].vm.form.dynamicItem = task.conditionList;
+                        top.frames[iframeId].vm.formQuartz.indFile = task.indFile;
+                    },
+                    yes: function (iframeId) {
+                        top.frames[iframeId].vm.acceptClick();
+                    },
+                });
+            },
+            //复制任务
+            copy: function (task) {
+                dialogOpen({
+                    title: '复制',
+                    url: 'task/copy.html',
+                    scroll: true,
+                    width: '1000px',
+                    height: '1000px',
+                    success: function (iframeId) {
+                        top.frames[iframeId].vm.formQuartz.taskDesc = task.taskDesc;
+                        top.frames[iframeId].vm.formQuartz.taskId = task.taskId;
+                        top.frames[iframeId].vm.formQuartz.taskName = task.taskName;
+                        top.frames[iframeId].vm.formQuartz.time = [task.startTime, task.endTime];
+                        top.frames[iframeId].vm.formQuartz.file = task.file;
+                        top.frames[iframeId].vm.fileList.push(task.file);
+                        top.frames[iframeId].vm.indFileList.push(task.indFile);
+                        top.frames[iframeId].vm.form.dynamicItem = task.conditionList;
+                        top.frames[iframeId].vm.formQuartz.indFile = task.indFile;
+                    },
+                    yes: function (iframeId) {
+                        top.frames[iframeId].vm.acceptClick();
+                    },
+                });
+            },
+            edit: function (task) {
+                dialogOpen({
+                    title: '修改',
+                    url: 'task/edit.html',
+                    scroll: true,
+                    width: '1000px',
+                    height: '1000px',
+                    success: function (iframeId) {
+                        top.frames[iframeId].vm.formQuartz.taskDesc = task.taskDesc;
+                        top.frames[iframeId].vm.formQuartz.taskId = task.taskId;
+                        top.frames[iframeId].vm.formQuartz.taskName = task.taskName;
+                        top.frames[iframeId].vm.formQuartz.time = [task.startTime, task.endTime];
+                        top.frames[iframeId].vm.formQuartz.file = task.file;
+                        top.frames[iframeId].vm.form.dynamicItem = task.conditionList;
+                        top.frames[iframeId].vm.formQuartz.indFile = task.indFile;
+                    },
+                    yes: function (iframeId) {
+                        top.frames[iframeId].vm.acceptClick();
+                    },
+                });
+            },
+            //移除任务
+            remove: function (taskId) {
+                var that = this;
+                top.layer.confirm('确定要移除任务吗？', {
+                    btn: ['确定', '取消'] //按钮
+                }, function () {
+                    $.ajax({
+                        url: "../task/remove",
+                        type: "post",
+                        data: {'time': (new Date()).getTime(), 'taskId': taskId},
+                        success: function (result) {
+                            if (result.code == "200") {
+                                top.layer.msg('任务移除成功', {icon: 1});
+                                window.setTimeout(that.list(), 1500);
+                            }
+                        }
+                    });
+                }, function () {
+
+                });
+            }
+        },
+        created: function () {
+            this.list();
+            this.taskStatus();
+        }
+    });
+</script>
+</body>
+</html>

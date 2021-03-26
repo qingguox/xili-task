@@ -1,0 +1,44 @@
+
+
+.leftbum {
+    float: left;
+    background: transparent;
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 12px;
+    padding: 7px 5px;
+    position: absolute;
+    top: 15px;
+    left: 10px;
+    border-radius: 2px;
+}
+
+.leftbum > li > a {
+    color: #444;
+    text-decoration: none;
+    display: inline-block
+}
+
+. > li > a > .fa, .content-header > .leftbum > li > a > .glyphicon, .content-header > .leftbum > li > a > .ion {
+    margin-right: 5px
+}
+
+.leftbum > li + li:before {
+    content: '>\00a0'
+}
+
+@media (max-width: 991px) {
+    .leftbum {
+        position: relative;
+        margin-top: 5px;
+        top: 0;
+        right: 0;
+        float: none;
+        background: #d2d6de;
+        padding-left: 10px
+    }
+
+    .leftbum li:before {
+        color: #97a0b3
+    }
+}

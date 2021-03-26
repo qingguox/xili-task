@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>任务首页 - 科帮网</title>
+    <meta name="author" content="小柒2012" />
+    <meta name="site" content="https://blog.52itstyle.com" />
+    <link rel="stylesheet" th:href="@{/iview/iview.css}">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script th:src="@{/libs/jquery-3.2.1.min.js}" type="text/javascript"></script>
+    <script th:src="@{/libs/vue.min.js}" type="text/javascript"></script>
+    <script th:src="@{/layer/layer.js}" type="text/javascript"></script>
+    <script th:src="@{/iview/iview.min.js}" type="text/javascript"></script>
+    <style type="text/css">
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="app2" v-cloak style="margin: 30px">
+    <template>
+        <i-form v-ref:form-quartz :model="formQuartz" :rules="ruleValidate" :label-width="80">
+            <Form-item label="任务名称" prop="taskName">
+                <i-input  v-model="formQuartz.taskName"  :value.sync="formQuartz.taskName" ></i-input>
+            </Form-item>
+            <Form-item label="任务描述" prop="taskDesc" >
+                <i-input  v-model="formQuartz.taskDesc" :value.sync="formQuartz.taskDesc" ></i-input>
+            </Form-item>
+            <Form-item label="时间段" prop="time">
+                <template>
+                    <el-date-picker
+                            v-model="formQuartz.time"
+                            :value.sync="formQuartz.time"
+                            type="datetimerange"
+                            range-separator="至"
+                            format="yyyy-MM-dd HH:mm:ss"
+                            value-format="yyyy-MM-dd HH:mm:ss"
+                            :disabled="true"
+                    >
+                    </el-date-picker>
+                </template>
+            </Form-item>
+
+            <Form-item label="任务参与用户" prop="fileUrl">
+                <el-link type="success"  @click="download(formQuartz.file)" > {{ formQuartz.file.name }}
+                </el-link>
+            </Form-item>
+            <el-button type="primary" :disabled="true">添加任务条件</el-button><br/><br/><br/>
+            <div v-for="(item, index) in form.dynamicItem" :key="index">
+                <div style="height: 50px; width: 500px;box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)">
+                    <i-select v-model="item.status" style="width: 300px" :disabled="true">
+                        <i-option v-for="option in options" v-if="item.status == option.value" v-bind:value="item.status" :disabled="true">
+                            {{ option.desc }}
+                        </i-option>
+                    </i-select>
+                    <el-link v-if="item.status == 2" type="success"  @click="download(formQuartz.indFile)"> {{ formQuartz.indFile.name }}
+                    </el-link>
+                    <i-button type="primary" icon="ios-icon-delete" :disabled="true">删除</i-button>
+                </div><br/><br/><br/>
+            </div>
+        </i-form>
+    </template>
+</div>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="text/javascript">
+    var vm = new Vue({
+        el : '#app2',
+        data : {
+            options: [
+            ],
+            form: {
+                status: '',
+                dynamicItem: [],
+            },
+            fileList: [],
+            indFileList : [{name: 'food2.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'}],
+            formQuartz: {
+                taskName : "",
+                taskDesc : "",
+                time : [],
+                file : {
+                    name : "",
+                    url : "",
+                },
+                indFile : {
+                    name : "",
+                    url : "",
+                },
+                cronExpression : '',
+                //旧任务名称  用于修改
+                oldJobName : '',
+                oldJobGroup : '',
+                jobMethodName:''
+            },
+            ruleValidate: {
+                taskId: [
+                    { required: true, message: '任务ID不能为空', trigger: 'blur' }
+                ],
+                taskName: [
+                    { required: true, message: '任务名称不能为空', trigger: 'blur' }
+                ],
+                taskDesc: [
+                    { required: true, message: '任务描述不能为空', trigger: 'blur' }
+                ],
+                time: [
+                    { required: true, message: '时间不能为空', trigger: 'blur' }
+                ],
+                fileUrl: [
+                    { required: true, message: '执行类不能为空', trigger: 'blur' }
+                ],
+                cronExpression: [
+                    { required: true, message: '执行时间不能为空', trigger: 'blur' }
+                ]
+            }
+        },
+        methods : {
+            download(file) {
+                var url = file.url;
+                var filename = file.name
+                if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                    window.navigator.msSaveOrOpenBlob(csvData, file.name);
+                } else {
+                    // var link = document.createElement('a')
+                    // link.download = file.name
+                    // var binaryData = [];
+                    // binaryData.push(file.file);
+                    // link.href = window.URL.createObjectURL(new Blob(binaryData, {type: "application/zip"}))
+                    // document.body.appendChild(link);
+                    // link.click()
+                    // window.URL.revokeObjectURL(link.href)
+                    // console.log(link.href)
+                    return axios.get(url, {
+                        params: {},
+                        responseType:'arraybuffer',
+                    }).then((r) => {
+                        const content = r.data
+                        const blob = new Blob([content],{type: file.type})
+                        if ('download' in document.createElement('a')) {
+                            const elink = document.createElement('a')
+                            elink.download = filename
+                            elink.style.display = 'none'
+                            elink.href = URL.createObjectURL(blob)
+                            document.body.appendChild(elink)
+                            elink.click()
+                            URL.revokeObjectURL(elink.href)
+                            document.body.removeChild(elink)
+                            alert('导出成功')
+                        }
+                    }).catch((r) => {
+                        console.error(r)
+                        alert('导出失败')
+                    })
+                }
+            },
+            // 任务状态枚举
+            indicators: function () {
+                $.ajax({
+                    url: "../task/indicators",
+                    type: "post",
+                    data: {
+                    },
+                    success: function (result) {
+                        vm.options = result.msg;
+                    }
+                });
+            },
+            //新建任务(略简单)
+            acceptClick : function(){
+                //Validate不起作用MD
+                var quartz =  vm.formQuartz;
+                if(vm.formQuartz.taskName==""||vm.formQuartz.taskDesc==""||vm.formQuartz.time==""){
+                    alert("请输入以上完整信息");
+                    return;
+                }
+                var json = {
+                    "taskId": quartz.taskId,
+                    "taskName": quartz.taskName,
+                    "taskDesc": quartz.taskDesc
+                };
+                $.ajax({
+                    url:"../task/edit",
+                    type:"post",
+                    dataType:'json',
+                    contentType:'application/json;charset=UTF-8',
+                    data: JSON.stringify(json),
+                    success: function(result) {
+                        if(result.code=="200"){
+                            window.parent.location.reload();
+                            //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
+                        }else{
+                            vm.$Notice.error({
+                                desc:  '系统异常'
+                            });
+                        }
+                    }
+                });
+            },
+            handleRemove(file, fileList) {
+                fileList.pop();
+                console.log(file, fileList);
+            },
+            handlePreview(file) {
+                console.log(file);
+            },
+            handleExceed(files, fileList) {
+                this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+            },
+            beforeRemove(file, fileList) {
+                return this.$confirm(`确定移除 ${ file.name }？`);
+            },
+        },
+        created : function() {
+            this.indicators();
+        }
+    })
+</script>
+</body>
+</html>

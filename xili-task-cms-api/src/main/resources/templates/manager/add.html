@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>任务首页 - 科帮网</title>
+    <meta name="author" content="小柒2012" />
+    <meta name="site" content="https://blog.52itstyle.com" />
+    <link rel="stylesheet" th:href="@{/iview/iview.css}">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script th:src="@{/libs/jquery-3.2.1.min.js}" type="text/javascript"></script>
+    <script th:src="@{/libs/vue.min.js}" type="text/javascript"></script>
+    <script th:src="@{/layer/layer.js}" type="text/javascript"></script>
+    <script th:src="@{/iview/iview.min.js}" type="text/javascript"></script>
+    <style type="text/css">
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak style="margin: 30px">
+    <template>
+        <i-form v-ref:form-quartz :model="formQuartz" :rules="ruleValidate" :label-width="80">
+
+            <Form-item label="学生导入" prop="fileList"> <!--prop 是 校验-->
+                <el-upload
+                        class="upload-demo"
+                        action="../file/upload/file"
+                        :on-preview="handlePreview"
+                        :on-remove="handleRemove"
+                        :before-remove="beforeRemove"
+                        :before-upload="beforeUpload"
+                        multiple
+                        :limit="1"
+                        :on-success="uploadFileSuccess"
+                        :on-exceed="handleExceed"
+                        :file-list="fileList">
+                    <el-button size="small" type="primary">点击上传</el-button>
+                    <div slot="tip" class="el-upload__tip">仅支持.xls/.xlsx格式的文件哦！</div>
+                </el-upload>
+            </Form-item>
+
+            <Form-item label="老师导入" prop="indFileList"> <!--prop 是 校验-->
+                <el-upload
+                        class="upload-demo"
+                        action="../file/upload/file"
+                        :on-preview="handlePreview"
+                        :on-remove="handleRemove2"
+                        :before-remove="beforeRemove2"
+                        :before-upload="beforeUpload"
+                        multiple
+                        :limit="1"
+                        :on-success="uploadIndFileSuccess"
+                        :on-exceed="handleExceed"
+                        :file-list="indFileList">
+                    <el-button size="small" type="primary">点击上传</el-button>
+                    <div slot="tip" class="el-upload__tip">仅支持.xls/.xlsx格式的文件哦！</div>
+                </el-upload>
+            </Form-item>
+        </i-form>
+    </template>
+</div>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="text/javascript">
+    var vm = new Vue({
+        el : '#app',
+        data : {
+            options: [
+                // {value: 0, desc: '上传文件'},
+                // {value: 1, desc: '学生周知'},
+                // {value: 2, desc: '上传地址'},
+            ],
+            form: {
+                status: '',
+                dynamicItem: [],
+            },
+            fileList: [],
+            indFileList : [],
+            formQuartz: {
+                taskName : "",
+                taskDesc : "",
+                time : [],
+                fileUrl : "",
+                indFileUrl : "",
+                cronExpression : '',
+                //旧任务名称  用于修改
+                oldJobName : '',
+                oldJobGroup : '',
+                jobMethodName:''
+            },
+            ruleValidate: {
+
+            }
+        },
+        methods : {
+            // 任务状态枚举
+            indicators: function () {
+                $.ajax({
+                    url: "../task/indicators",
+                    type: "post",
+                    data: {
+                    },
+                    success: function (result) {
+                        vm.options = result.msg;
+                    }
+                });
+            },
+            addItem : function() {
+                this.form.dynamicItem.push({
+                    status: '',
+                })
+            },
+            deleteItem : function (item, index) {
+                this.form.dynamicItem.splice(index, 1)
+            },
+            //新建任务(略简单)
+            acceptClick : function(){
+                //Validate不起作用MD
+                var quartz = vm.formQuartz;
+                var fileList = vm.fileList[0];
+                var indFileList = vm.indFileList[0];
+                if(JSON.stringify(vm.indFileList)=='[]' && JSON.stringify(vm.fileList)=='[]'){
+                    alert("请输入以上完整信息");
+                    return;
+                }
+                var json = {};
+                var json1 = {};
+                var json2 = {};
+                var json3 = {};
+                if(JSON.stringify(vm.fileList) != '[]' && JSON.stringify(vm.indFileList) !='[]') {
+                    json1 = {
+                        "file": {
+                            "name": fileList.name,
+                            "url": fileList.url
+                        },      // name and url
+                        "indFile": {
+                            "name": indFileList.name,
+                            "url": indFileList.url
+                        }
+                    };
+                    json = json1;
+                } else if (JSON.stringify(vm.fileList) != '[]') {
+                    json2 = {
+                        "file": {
+                            "name": fileList.name,
+                            "url": fileList.url
+                        },        // name and url
+                    };
+                    json = json2;
+                } else if (JSON.stringify(vm.indFileList) != '[]') {
+                    json3 = {
+                        "indFile": {
+                            "name": fileList.name,
+                            "url": fileList.url
+                        },         // name and url
+                    };
+                    json = json3;
+                }
+                $.ajax({
+                    url:"../manager/add",
+                    type:"post",
+                    dataType:'json',
+                    contentType:'application/json;charset=UTF-8',
+                    data: JSON.stringify(json),
+                    success: function(result) {
+                        console.log(result.code)
+                        if(result.code == "200"){
+                            window.parent.location.reload();
+                            //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
+                        }else{
+                            vm.$Notice.error({
+                                desc:  '系统异常'
+                            });
+                        }
+                    }
+                });
+            },
+            beforeUpload(file){
+                const isLt100M = file.size / 1024 / 1024 / 1024 < 11;
+                if (['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'].indexOf(file.type) == -1) {
+                    this.$message.error('上传文件只支持.xls/.xlsx文件!');
+                    return false;
+                }
+                if (!isLt100M) {
+                    this.$message.error('文件大小不能超过100MB哦!');
+                    return false;
+                }
+                // this.$refs.upload.clearFiles();
+            },
+            beforeIndUpload(file){
+                const isLt100M = file.size / 1024 / 1024 / 1024 < 11;
+                if (['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'].indexOf(file.type) == -1) {
+                    this.$message.error('仅支持.xls/.xlsx格式的文件哦！');
+                    return false;
+                }
+                if (!isLt100M) {
+                    this.$message.error('压缩包大小不能超过100MB哦!');
+                    return false;
+                }
+                // this.$refs.upload.clearFiles();
+            },
+            handleRemove(file, fileList) {
+                this.fileList = fileList.slice(-1)
+                console.log(file, fileList);
+            },
+            handleRemove2(file, fileList) {
+                this.indFileList = fileList.slice(-1)
+                console.log(file, fileList);
+            },
+            handlePreview(file) {
+                var url = file.url;
+                var filename = file.name
+                if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                    window.navigator.msSaveOrOpenBlob(csvData, file.name);
+                } else {
+                    // var link = document.createElement('a')
+                    // link.download = file.name
+                    // var binaryData = [];
+                    // binaryData.push(file.file);
+                    // link.href = window.URL.createObjectURL(new Blob(binaryData, {type: "application/zip"}))
+                    // document.body.appendChild(link);
+                    // link.click()
+                    // window.URL.revokeObjectURL(link.href)
+                    // console.log(link.href)
+                    return axios.get(url, {
+                        params: {},
+                        responseType:'arraybuffer',
+                    }).then((r) => {
+                        const content = r.data
+                        const blob = new Blob([content],{type: file.type})
+                        if ('download' in document.createElement('a')) {
+                            const elink = document.createElement('a')
+                            elink.download = filename
+                            elink.style.display = 'none'
+                            elink.href = URL.createObjectURL(blob)
+                            document.body.appendChild(elink)
+                            elink.click()
+                            URL.revokeObjectURL(elink.href)
+                            document.body.removeChild(elink)
+                            alert('导出成功')
+                        }
+                    }).catch((r) => {
+                        console.error(r)
+                        alert('导出失败')
+                    })
+                }
+            },
+            handleExceed(files, fileList) {
+                this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+            },
+            beforeRemove(file, fileList) {
+                return this.$confirm(`确定移除 ${ file.name }？`);
+            },
+            beforeRemove2(file, fileList) {
+                return this.$confirm(`确定移除 ${ file.name }？`);
+            },
+            uploadFileSuccess(result){
+                if(result.code == "200"){
+                    vm.fileList.push(result.msg[0]);
+                    this.$message.success("文件上传成功");
+                }else{
+                    this.$message.error("文件上传错误");//文件上传错误提示
+                }
+            },
+            uploadIndFileSuccess(result){
+                if(result.code == "200"){
+                    vm.indFileList.push(result.msg[0]);
+                    this.$message.success("文件上传成功");
+                }else{
+                    this.$message.error("文件上传错误");//文件上传错误提示
+                }
+            },
+        },
+        created : function() {
+            this.indicators();
+        }
+    })
+</script>
+</body>
+</html>

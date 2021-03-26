@@ -1,0 +1,7 @@
+{
+  "name": "xili-task-cms-api",
+  "version": "1.0.0",
+  "devDependencies": {
+    "axios": "^0.21.1"
+  }
+}

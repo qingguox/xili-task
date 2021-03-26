@@ -35,6 +35,8 @@
     </dependencies>
 
     <build>
+        <!-- 更改打包之后的 jar name，去掉 version 信息，便于部署 -->
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <!-- 下面这段 sdk 不用增加，只有 component/api/runner 需要增加，避免 deploy 出去 -->
             <plugin>
