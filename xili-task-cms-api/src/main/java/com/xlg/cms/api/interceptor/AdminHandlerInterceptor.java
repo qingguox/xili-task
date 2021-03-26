@@ -66,7 +66,10 @@ public class AdminHandlerInterceptor implements HandlerInterceptor {
         }
         int role = 0;
         if (role1 instanceof Integer) {
-            role = (int)role1;
+            role = (int) role1;
+        }
+        if (role1 instanceof String) {
+            role = Integer.parseInt((String) role1);
         }
         List<String> urls = roleUrlMap.get(role);
         if (CollectionUtils.isEmpty(urls)) {

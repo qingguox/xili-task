@@ -42,41 +42,37 @@
         <i-input v-model="taskDesc" placeholder="请输入任务备注，支持模糊搜索" style="width: 200px"></i-input>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <b>时间段：</b>
         <template>
-                <el-date-picker
-                        v-model="time"
-                        type="datetimerange"
-                        range-separator="至"
-                        format="yyyy-MM-dd HH:mm:ss"
-                        value-format="yyyy-MM-dd HH:mm:ss"
-                        start-placeholder="开始日期"
-                        end-placeholder="结束日期">
-                </el-date-picker>
+            <el-date-picker
+                    v-model="time"
+                    type="datetimerange"
+                    range-separator="至"
+                    format="yyyy-MM-dd HH:mm:ss"
+                    value-format="yyyy-MM-dd HH:mm:ss"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期">
+            </el-date-picker>
         </template>
-       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <i-button type="primary" @click="search()" icon="ios-search">查询</i-button>&nbsp;&nbsp;
-        <div th:if="${session.role} != 2">
-            <i-button type="primary" @click="create()" icon="ios-reload">创建任务</i-button>&nbsp;&nbsp;
-            <i-button type="primary" @click="taskExport()" icon="ios-reload">导出列表</i-button>&nbsp;&nbsp;
-        </div>
-        <i-button type="primary" @click="click()">打印选择的时间</i-button>
+        <i-button type="primary" th:if="${session.role} != 2" @click="create()" icon="ios-reload">创建任务</i-button>&nbsp;&nbsp;
+        <i-button type="primary" th:if="${session.role} != 2" @click="taskExport()" icon="ios-reload">导出列表</i-button>&nbsp;&nbsp;
+        <i-button type="primary" th:if="${session.role} != 2" @click="click()">打印选择的时间</i-button>
     </div>
-    <div style="margin-bottom: 6px;margin: 30px">
-        <div th:if="${session.role} != 2">
-            <template>
-                <i-table border :content="self" :columns="tableTitle" :data="JobData"></i-table>
-                <br>
-                <!-- 待实现分页功能 -->
-                <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
-            </template>
-        </div>
-        <div>
-            <template>
-                <i-table border :content="self" :columns="tableTitleStudent" :data="JobData"></i-table>
-                <br>
-                <!-- 待实现分页功能 -->
-                <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
-            </template>
-        </div>
+    <div style="margin-bottom: 6px;margin: 30px" th:if="${session.role} != 2">
+        <template>
+            <i-table border :content="self" :columns="tableTitle" :data="JobData"></i-table>
+            <br>
+            <!-- 待实现分页功能 -->
+            <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
+        </template>
+    </div>
+    <div style="margin-bottom: 6px;margin: 30px" th:if="${session.role} == 2">
+        <template>
+            <i-table border :content="self" :columns="tableTitleStudent" :data="JobData"></i-table>
+            <br>
+            <!-- 待实现分页功能 -->
+            <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
+        </template>
     </div>
 </div>
 
@@ -252,7 +248,7 @@
                     // 返回方法集合
                     return h('div', functionList);
                 }
-            }],
+            }]
         },
         methods: {
             click: function () {

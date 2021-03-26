@@ -117,6 +117,7 @@ public class LoginController {
     public String logout(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession();
         session.removeAttribute("user");
+        session.removeAttribute("role");
         Cookie cookie = CookieUtils.removeCookie(request.getCookies(), COOKIE_PREFIX_USER);
         Cookie cookie2 = CookieUtils.removeCookie(request.getCookies(), COOKIE_PREFIX_ROLE);
         if (cookie != null) {

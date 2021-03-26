@@ -100,7 +100,10 @@ public class LoginFilter implements Filter {
                     String password = cookie.getValue().split("\\.")[1];
                     logger.info("username={}, password={}", username, password);
 
-                    int role = Integer.parseInt(cookie2.getValue());
+                    int role = 0;
+                    if (cookie2 != null) {
+                        role = Integer.parseInt(cookie2.getValue());
+                    }
                     // TODO 查询数据库是否存在用户
 
                     // 获得就是md5 加密密码，此处无需加密
