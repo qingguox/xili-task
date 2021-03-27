@@ -237,15 +237,15 @@ public class TeacherTaskController {
 
 
         Object user = request.getSession().getAttribute("user");
-        long creator = 0;
+        long createId = 0;
         if (user != null) {
-            creator = Long.parseLong((String) user);
+            createId = Long.parseLong((String) user);
         }
         logger.info(
-                "taskId={}, taskName={}, status={}, creator={}, taskDesc={}, startTime={}, endTime={}, pageNo={}, "
+                "taskId={}, taskName={}, status={}, createId={}, taskDesc={}, startTime={}, endTime={}, pageNo={}, "
                         + "pageSize={}",
                 taskId,
-                taskName, status, creator, taskDesc, startTime, endTime, pageNo, pageSize);
+                taskName, status, createId, taskDesc, startTime, endTime, pageNo, pageSize);
 
         Result search = search(taskId, taskName, status, taskDesc, startTime, endTime, pageNo, pageSize, request);
         Object msg = search.get("msg");
@@ -254,12 +254,14 @@ public class TeacherTaskController {
             dataList.addAll((Collection<? extends TeacherTask>) msg);
         }
 
+        AtomicReference<String> creator = new AtomicReference<>(xlgUserService.format(createId));
         Workbook workbook = ExcelUtils.createWorkBook();
         Sheet sheet = workbook.createSheet();
         ExcelUtils.writeHeader(sheet,
                 ImmutableList.of("任务id", "任务名称", "任务开始时间", "任务结束时间",
                         "任务状态", "任务创建时间", "任务备注", "任务总人数", "任务完成人数", "任务未完成人数", "创建人"));
 
+        creator.set("");
         if (isNotEmpty(dataList)) {
             dataList.forEach(data -> {
                 List<Object> values = Lists.newArrayList();
@@ -274,13 +276,14 @@ public class TeacherTaskController {
                 values.add(data.getTaskFinished());
                 values.add(data.getTaskUnFinished());
                 values.add(data.getCreator());
+                creator.set(data.getCreator());
                 ExcelUtils.writeRow(sheet, values);
             });
         }
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             workbook.write(baos);
-            TemplateStoreFileUtil.download(response, baos.toByteArray(), "taskList-teacher", "xls");
+            TemplateStoreFileUtil.download(response, baos.toByteArray(), "教师-" + creator + "-创建的任务列表", ".xls");
         } catch (IOException e) {
             logger.error("生成xls/xlsx文件失败", e);
         }
@@ -333,7 +336,7 @@ public class TeacherTaskController {
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             workbook.write(baos);
-            TemplateStoreFileUtil.download(response, baos.toByteArray(), "taskList-teacher", "xls");
+            TemplateStoreFileUtil.download(response, baos.toByteArray(), "任务-" + taskId + "-学生完成情况", ".xls");
         } catch (IOException e) {
             logger.error("生成xls/xlsx文件失败", e);
         }

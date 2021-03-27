@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
@@ -94,7 +95,7 @@ public class ManagerController {
             dto.setUserId(cur.getUserId());
             dto.setType(RoleEnum.fromValue(cur.getType()).getDesc());
             return dto;
-        }).collect(Collectors.toList());
+        }).sorted(Comparator.comparingLong(XlgUserDTO::getId)).collect(Collectors.toList());
         return Result.ok(xlgUserDTOS);
     }
 
@@ -188,7 +189,7 @@ public class ManagerController {
     @GetMapping(value = "/export")
     public void templateExport(@RequestParam("name") String name, @RequestParam("status") String status,
             @RequestParam("pageNo") String pageNo, @RequestParam("pageSize") String pageSize,
-            HttpServletResponse response) {
+            HttpServletResponse response, HttpServletRequest request) {
         Map<String, String> map = Maps.newHashMap();
         map.put("name", name);
         map.put("status", status);
@@ -222,7 +223,8 @@ public class ManagerController {
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             workbook.write(baos);
-            TemplateStoreFileUtil.download(response, baos.toByteArray(), "userList-", "xls");
+//            TemplateStoreFileUtil.download2(request, response, baos.toByteArray(), "用户名单-", "xls");
+            TemplateStoreFileUtil.download(response, baos.toByteArray(), "用户列表", ".xls");
         } catch (IOException e) {
             logger.error("生成xls/xlsx文件失败", e);
         }
