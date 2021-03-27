@@ -111,6 +111,11 @@ public class ManagerController {
         }
     }
 
+    /**
+     * 管理员修改数据
+     * @param xlgUserDTO
+     * @return
+     */
     @RequestMapping("/edit")
     @ResponseBody
     public Result edit(@RequestBody XlgUserDTO xlgUserDTO) {
