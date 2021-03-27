@@ -123,7 +123,7 @@ public class XlgTaskDAO {
             source.addValue("startTime", model.getStartTime());
         }
         if (model.getEndTime() != 0L) {
-            buffer.append(" and start_time <= :endTime");
+            buffer.append(" and end_time <= :endTime");
             source.addValue("endTime", model.getEndTime());
         }
         if (model.getUpdateTime() != 0L) {

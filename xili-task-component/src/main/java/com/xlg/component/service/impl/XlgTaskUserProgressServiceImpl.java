@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,19 @@ public class XlgTaskUserProgressServiceImpl implements XlgTaskUserProgressServic
                 .distinct()
                 .collect(Collectors.toList());
        return xlgTaskUserProgressDAO.updateStatus(unfinishedIds, taskId, UserProgressStatusEnum.UNFINISHED.getValue());
+    }
+
+    @Override
+    public long getUserFinishedByTaskId(long taskId, int status) {
+        return xlgTaskUserProgressDAO.getUserFinishedByTaskId(taskId, status);
+    }
+
+    @Override
+    public List<Long> getStatusByTaskId(long taskId, List<Integer> status) {
+        List<XlgTaskUserProgress> userProgressList = xlgTaskUserProgressDAO.getByTaskId(taskId);
+        List<Long> userIdList = userProgressList.stream().filter(cur -> status.contains(cur.getStatus()))
+                .map(XlgTaskUserProgress::getUserId).distinct().collect(Collectors.toList());
+        return ListUtils.emptyIfNull(userIdList);
     }
 
 }

@@ -78,6 +78,7 @@
 
 <!-- 引入组件库 -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script type="text/javascript">
     var vm = new Vue({
         el: '#app',
@@ -277,14 +278,16 @@
                 if(taskDesc==""){
                     taskDesc = ""
                 }
-                let startTime = new Date(this.time[0]).getTime();
-                let endTime = new Date(this.time[1]).getTime();
-                if (Object.keys(startTime).length==0) {
+                let startTime = 0;
+                let endTime = 0;
+                if (this.time == null || Object.keys(this.time).length==0) {
                     startTime = 0
-                }
-                if (Object.keys(endTime).length==0) {
                     endTime = 0
+                } else {
+                    startTime = new Date(this.time[0]).getTime();
+                    endTime = new Date(this.time[1]).getTime();
                 }
+                // alert(startTime);
                 $.ajax({
                     url: "../task/search",
                     type: "post",
@@ -318,20 +321,69 @@
             },
             // 任务列表导出
             taskExport: function () {
-                alert("任务列表到处")
-                $.ajax({
-                    url: "../task/export",
-                    type: "post",
-                    data: {'time': (new Date()).toString(), 'taskId': this.taskId},
-                    success: function (result) {
-                        if (result.code == "0") {
-                            vm.$Notice.success({
-                                desc: '查看任务成功'
-                            });
-                            vm.list();
-                        }
-                    }
-                });
+                let taskId = this.taskId;
+                let taskName = this.taskName;
+                let status = this.status;
+                let creator = this.creator;
+                let taskDesc = this.taskDesc;
+                if(taskId==""){
+                    taskId = 0
+                }
+                if(taskName==""){
+                    taskName = ""
+                }
+                if(status==""){
+                    status = 0
+                }
+                if(creator==""){
+                    creator = ""
+                }
+                if(taskDesc==""){
+                    taskDesc = ""
+                }
+                let startTime = 0;
+                let endTime = 0;
+                if (this.time == null || Object.keys(this.time).length==0) {
+                    startTime = 0
+                    endTime = 0
+                } else {
+                    startTime = new Date(this.time[0]).getTime();
+                    endTime = new Date(this.time[1]).getTime();
+                }
+                return axios.get('../task/export', {
+                    params: {
+                        'taskId': taskId,
+                        "taskName": taskName,
+                        'status': status,
+                        "creator": creator,
+                        "taskDesc": taskDesc,
+                        "startTime": startTime,
+                        "endTime": endTime,
+                        'pageSize': this.pageSize,
+                        'pageNo': this.pageNo,
+                    },
+                    responseType: 'blob',
+                }).then((res) => {
+                    const link = document.createElement('a')
+                    let blob = new Blob([res.data], {type: 'application/vnd.ms-excel'})
+                    link.style.display = 'none'
+                    link.href = URL.createObjectURL(blob)
+
+                    let f = res.headers['content-disposition']
+                    let w = f.substring(20, f.length);
+                    alert(w);
+                    // link.download = res.headers['content-disposition'] //下载后文件名
+                    link.download = w //下载的文件名
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                }).catch(error => {
+                    this.$Notice.error({
+                        title: '错误',
+                        desc: '网络连接错误'
+                    })
+                    console.log(error)
+                })
             },
             //新建任务(略简单)
             create: function () {

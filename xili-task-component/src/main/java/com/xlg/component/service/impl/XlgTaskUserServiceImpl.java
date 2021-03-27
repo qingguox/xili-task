@@ -25,4 +25,9 @@ public class XlgTaskUserServiceImpl implements XlgTaskUserService {
     public int batchInsert(List<XlgTaskUser> list) {
         return xlgTaskUserDAO.batchInsert(list);
     }
+
+    @Override
+    public long getUserCountByTaskId(long taskId) {
+        return xlgTaskUserDAO.getUserCountByTaskId(taskId);
+    }
 }

@@ -39,4 +39,10 @@ public class XlgTaskUserDAO {
         return namedParameterJdbcTemplate.batchUpdate(sql, parameterSources).length;
     }
 
+    public long getUserCountByTaskId(long taskId) {
+        String sql = "select count(1) from " + table + " where task_id =:taskId";
+        long count =
+                namedParameterJdbcTemplate.queryForObject(sql, new MapSqlParameterSource("taskId", taskId), Long.class);
+        return count;
+    }
 }

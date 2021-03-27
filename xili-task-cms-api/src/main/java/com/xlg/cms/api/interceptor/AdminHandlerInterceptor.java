@@ -31,7 +31,7 @@ public class AdminHandlerInterceptor implements HandlerInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(AdminHandlerInterceptor.class);
     private static Map<Integer, List<String>> roleUrlMap = Maps.newHashMap();
-
+    private static List<String> otherUrls = Lists.newArrayList("AdminLTE", "bootstrap", "libs");
     static {
         roleUrlMap.put(TEACHER.value, Lists.newArrayList("teacher", "task"));
         roleUrlMap.put(STUDENT.value, Lists.newArrayList("student", "task"));
@@ -55,6 +55,9 @@ public class AdminHandlerInterceptor implements HandlerInterceptor {
         path = split[1];
         System.out.println(path);
 
+        if (otherUrls.contains(path)) {
+            return true;
+        }
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         // 1、判断当前用户是否已经登录

@@ -12,4 +12,8 @@ public interface XlgTaskUserProgressService {
     int batchInsert(List<XlgTaskUserProgress> list);
 
     int updateStatus(long taskId);
+
+    long getUserFinishedByTaskId(long taskId, int status);
+
+    List<Long> getStatusByTaskId(long taskId, List<Integer> status);
 }

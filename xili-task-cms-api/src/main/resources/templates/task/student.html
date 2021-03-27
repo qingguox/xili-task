@@ -75,6 +75,7 @@
 
 <!-- 引入组件库 -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script type="text/javascript">
     var vm = new Vue({
         el: '#app',
@@ -96,11 +97,6 @@
                 dynamicItem : [],
             },
             options: [
-                {value: 0, desc: '全部'},
-                {value: 1, desc: '进行中'},
-                {value: 2, desc: '已完成'},
-                {value: 3, desc: '待进行'},
-                {value: 4, desc: '人工下线'}
             ],
             options1: [
                 {value: 1, desc: '完成'},
@@ -281,6 +277,9 @@
                                 vm.JobData[i].picName = "block"
                             }
                         }
+                    },
+                    error: function (result) {
+                        this.$message.error('很抱歉，您没有权限!');
                     }
                 });
             },

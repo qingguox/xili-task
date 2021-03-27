@@ -62,4 +62,12 @@ public class XlgTaskUserProgressDAO {
         ).toArray(MapSqlParameterSource[]::new);
         return namedParameterJdbcTemplate.batchUpdate(sql, source).length;
     }
+
+    public long getUserFinishedByTaskId(long taskId, int status) {
+        String sql = "select count(1) from " + table + " where task_id =:taskId and status =:status";
+        long count =
+                namedParameterJdbcTemplate.queryForObject(sql, new MapSqlParameterSource("taskId", taskId)
+                        .addValue("status", status), Long.class);
+        return count;
+    }
 }

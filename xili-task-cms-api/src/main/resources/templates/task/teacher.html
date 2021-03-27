@@ -70,6 +70,7 @@
 
 <!-- 引入组件库 -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script type="text/javascript">
     var vm = new Vue({
         el: '#app',
@@ -90,11 +91,6 @@
                 dynamicItem : [],
             },
             options: [
-                {value: 0, desc: '全部'},
-                {value: 1, desc: '进行中'},
-                {value: 2, desc: '已完成'},
-                {value: 3, desc: '待进行'},
-                {value: 4, desc: '人工下线'}
             ],
             tableTitle: [{
                 key: "taskId",
@@ -174,22 +170,22 @@
                         }
                     }, '导出学生完成情况');
                     functionList.push(taskFinished);
-                    //复制
-                    var copy = h('Button', {
-                        props: {
-                            type: 'primary',
-                            icon: 'ios-pause'
-                        },
-                        style: {
-                            marginRight: '8px'
-                        },
-                        on: {
-                            click: function () {
-                                vm.copy(params.row);
-                            }
-                        }
-                    }, '复制');
-                    functionList.push(copy);
+                    // //复制
+                    // var copy = h('Button', {
+                    //     props: {
+                    //         type: 'primary',
+                    //         icon: 'ios-pause'
+                    //     },
+                    //     style: {
+                    //         marginRight: '8px'
+                    //     },
+                    //     on: {
+                    //         click: function () {
+                    //             vm.copy(params.row);
+                    //         }
+                    //     }
+                    // }, '复制');
+                    // functionList.push(copy);
                     // 返回方法集合
                     return h('div', functionList);
                 }
@@ -203,17 +199,41 @@
             },
             //搜索
             search: function () {
+                let taskId = this.taskId;
+                let taskName = this.taskName;
+                let status = this.status;
+                let taskDesc = this.taskDesc;
+                if(taskId==""){
+                    taskId = 0
+                }
+                if(taskName==""){
+                    taskName = ""
+                }
+                if(status==""){
+                    status = 0
+                }
+                if(taskDesc==""){
+                    taskDesc = ""
+                }
+                let startTime = 0;
+                let endTime = 0;
+                if (this.time == null || Object.keys(this.time).length==0) {
+                    startTime = 0
+                    endTime = 0
+                } else {
+                    startTime = new Date(this.time[0]).getTime();
+                    endTime = new Date(this.time[1]).getTime();
+                }
                 $.ajax({
-                    url: "../task/search",
+                    url: "../teacher/task/search",
                     type: "post",
                     data: {
-                        'task': this.taskId,
-                        "taskName": this.taskName,
-                        'status': this.status,
-                        "creator": this.creator,
-                        "taskDesc": this.taskDesc,
-                        "startTime": this.time[0],
-                        "endTime": this.time[1],
+                        'taskId': taskId,
+                        "taskName": taskName,
+                        'status': status,
+                        "taskDesc": taskDesc,
+                        "startTime": startTime,
+                        "endTime": endTime,
                         'pageSize': this.pageSize,
                         'pageNo': this.pageNo,
                     },
@@ -234,22 +254,99 @@
                     }
                 });
             },
+            // 任务完成情况导出
+            taskFinished: function (task) {
+                let taskId = task.taskId;
+                if(taskId==""){
+                    taskId = 0
+                }
+                return axios.get('../teacher/task/finished-export', {
+                    params: {
+                        'taskId': taskId,
+                    },
+                    responseType: 'blob',
+                }).then((res) => {
+                    const link = document.createElement('a')
+                    let blob = new Blob([res.data], {type: 'application/vnd.ms-excel'})
+                    link.style.display = 'none'
+                    link.href = URL.createObjectURL(blob)
+
+                    let f = res.headers['content-disposition']
+                    let w = f.substring(20, f.length);
+                    alert(w);
+                    // link.download = res.headers['content-disposition'] //下载后文件名
+                    link.download = w //下载的文件名
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                }).catch(error => {
+                    this.$Notice.error({
+                        title: '错误',
+                        desc: '网络连接错误'
+                    })
+                    console.log(error)
+                })
+            },
             // 任务列表导出
             taskExport: function () {
-                alert("任务列表到处")
-                $.ajax({
-                    url: "../task/export",
-                    type: "post",
-                    data: {'time': (new Date()).toString(), 'taskId': this.taskId},
-                    success: function (result) {
-                        if (result.code == "200") {
-                            vm.$Notice.success({
-                                desc: '查看任务成功'
-                            });
-                            vm.list();
-                        }
-                    }
-                });
+                let taskId = this.taskId;
+                let taskName = this.taskName;
+                let status = this.status;
+                let taskDesc = this.taskDesc;
+                if(taskId==""){
+                    taskId = 0
+                }
+                if(taskName==""){
+                    taskName = ""
+                }
+                if(status==""){
+                    status = 0
+                }
+                if(taskDesc==""){
+                    taskDesc = ""
+                }
+                let startTime = 0;
+                let endTime = 0;
+                if (this.time == null || Object.keys(this.time).length==0) {
+                    startTime = 0
+                    endTime = 0
+                } else {
+                    startTime = new Date(this.time[0]).getTime();
+                    endTime = new Date(this.time[1]).getTime();
+                }
+                return axios.get('../teacher/task/export', {
+                    params: {
+                        'taskId': taskId,
+                        "taskName": taskName,
+                        'status': status,
+                        "taskDesc": taskDesc,
+                        "startTime": startTime,
+                        "endTime": endTime,
+                        'pageSize': this.pageSize,
+                        'pageNo': this.pageNo,
+                    },
+                    responseType: 'blob',
+                }).then((res) => {
+                    const link = document.createElement('a')
+                    let blob = new Blob([res.data], {type: 'application/vnd.ms-excel'})
+                    link.style.display = 'none'
+                    link.href = URL.createObjectURL(blob)
+
+                    let f = res.headers['content-disposition']
+                    let w = f.substring(20, f.length);
+                    alert(w);
+                    // link.download = res.headers['content-disposition'] //下载后文件名
+                    link.download = w //下载的文件名
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                }).catch(error => {
+                    this.$Notice.error({
+                        title: '错误',
+                        desc: '网络连接错误'
+                    })
+                    console.log(error)
+                })
             },
             //新建任务(略简单)
             create: function () {
@@ -278,16 +375,6 @@
                     }
                 });
             },
-            taskFinished: function (task) {
-                $.ajax({
-                    url: "../task/finish",
-                    type: "post",
-                    data: {'time': (new Date()).toString(), 'taskId': task.taskId},
-                    success: function (result) {
-
-                    }
-                });
-            },
             //查看任务
             touch: function (task) {
                 dialogOpen({
@@ -297,11 +384,13 @@
                     width: '1000px',
                     height: '1000px',
                     success: function (iframeId) {
-                        top.frames[iframeId].vm.formQuartz = task;
+                        top.frames[iframeId].vm.formQuartz.taskDesc = task.taskDesc;
+                        top.frames[iframeId].vm.formQuartz.taskId = task.taskId;
+                        top.frames[iframeId].vm.formQuartz.taskName = task.taskName;
                         top.frames[iframeId].vm.formQuartz.time = [task.startTime, task.endTime];
-                        top.frames[iframeId].vm.formQuartz.file = {name: 'food2.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'};
-                        top.frames[iframeId].vm.form.dynamicItem = [{status: 0}, {status: 1},{status: 2}];
-                        top.frames[iframeId].vm.formQuartz.indFile = {name: 'food3.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'};
+                        top.frames[iframeId].vm.formQuartz.file = task.file;
+                        top.frames[iframeId].vm.form.dynamicItem = task.conditionList;
+                        top.frames[iframeId].vm.formQuartz.indFile = task.indFile;
                     },
                     yes: function (iframeId) {
                         top.frames[iframeId].vm.acceptClick();

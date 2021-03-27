@@ -1,15 +1,25 @@
 package com.xlg.cms.api.controller.task;
 
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -20,6 +30,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.xlg.cms.api.dto.TaskIndicatorDTO;
 import com.xlg.cms.api.dto.TaskSaveDTO;
@@ -29,6 +40,8 @@ import com.xlg.cms.api.model.TaskShow;
 import com.xlg.cms.api.model.UploadFile;
 import com.xlg.cms.api.utils.BlobFileUtils;
 import com.xlg.cms.api.utils.DateUtils;
+import com.xlg.cms.api.utils.ExcelUtils;
+import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
 import com.xlg.component.common.TaskConstants;
 import com.xlg.component.enums.AllStatusEnum;
@@ -169,6 +182,67 @@ public class TaskController {
         }).sorted(Comparator.comparingLong(TaskShow::getTaskId)).collect(Collectors.toList());
         return Result.ok(taskShowList);
     }
+
+
+    /**
+     * 任务查找
+     */
+    @RequestMapping("/export")
+    public void export(@RequestParam("taskId") long taskId,
+            @RequestParam("taskName") String taskName,
+            @RequestParam("status") int status,
+            @RequestParam("creator") String creator,
+            @RequestParam("taskDesc") String taskDesc,
+            @RequestParam("startTime") long startTime,
+            @RequestParam("endTime") long endTime,
+            @RequestParam("pageNo") int pageNo,
+            @RequestParam("pageSize") int pageSize, HttpServletResponse response, HttpServletRequest request) {
+
+        logger.info("taskId={}, taskName={}, status={}, creator={}, taskDesc={}, startTime={}, endTime={}, pageNo={}, pageSize={}", taskId,
+                taskName, status, creator, taskDesc, startTime, endTime, pageNo, pageSize);
+
+        logger.info(
+                "taskId={}, taskName={}, status={}, creator={}, taskDesc={}, startTime={}, endTime={}, pageNo={}, "
+                        + "pageSize={}",
+                taskId,
+                taskName, status, creator, taskDesc, startTime, endTime, pageNo, pageSize);
+
+        Result search = search(taskId, taskName, status, creator, taskDesc, startTime, endTime, pageNo, pageSize);
+        Object msg = search.get("msg");
+        List<TaskShow> dataList = Lists.newArrayList();
+        if (!Objects.isNull(msg)) {
+            dataList.addAll((Collection<? extends TaskShow>) msg);
+        }
+
+        Workbook workbook = ExcelUtils.createWorkBook();
+        Sheet sheet = workbook.createSheet();
+        ExcelUtils.writeHeader(sheet,
+                ImmutableList.of("任务id", "任务名称", "任务开始时间", "任务结束时间",
+                        "任务状态", "任务创建时间", "任务备注", "创建人"));
+
+        if (isNotEmpty(dataList)) {
+            dataList.forEach(data -> {
+                List<Object> values = Lists.newArrayList();
+                values.add(data.getTaskId());
+                values.add(data.getTaskName());
+                values.add(data.getStartTime());
+                values.add(data.getEndTime());
+                values.add(data.getStatus());
+                values.add(data.getCreateTime());
+                values.add(data.getTaskDesc());
+                values.add(data.getCreator());
+                ExcelUtils.writeRow(sheet, values);
+            });
+        }
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            workbook.write(baos);
+            TemplateStoreFileUtil.download(response, baos.toByteArray(), "taskList-task", "xls");
+        } catch (IOException e) {
+            logger.error("生成xls/xlsx文件失败", e);
+        }
+    }
+
 
     /**
      * 指标集合
