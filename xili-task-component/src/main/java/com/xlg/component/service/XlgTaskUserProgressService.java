@@ -19,4 +19,22 @@ public interface XlgTaskUserProgressService {
     List<Long> getStatusByTaskId(long taskId, List<Integer> status);
 
     List<XlgTaskUserProgress> getProgressListByUserId(Collection taskIds, long userId);
+
+    XlgTaskUserProgress getByTaskIdAndUserId(long taskId, long userId);
+
+    /**
+     *  更新进度
+     * @param progressId
+     * @param status
+     * @return
+     */
+    int updateStatus(long progressId, int status);
+
+    /**
+     * 更新完成item个数
+     * @param progressId
+     * @param finishedItemSize
+     * @return
+     */
+    int updateFinishedCount(long progressId, long finishedItemSize);
 }

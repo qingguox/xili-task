@@ -3,6 +3,7 @@ package com.xlg.cms.api.controller.teacher;
 import static com.xlg.component.enums.UserProgressStatusEnum.DOING;
 import static com.xlg.component.enums.UserProgressStatusEnum.FINISHED;
 import static com.xlg.component.enums.UserProgressStatusEnum.UNFINISHED;
+import static com.xlg.component.enums.UserProgressStatusEnum.UNKNOWN;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.io.ByteArrayOutputStream;
@@ -47,14 +48,15 @@ import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
-import com.xlg.component.dao.XlgTaskUserDAO;
 import com.xlg.component.enums.IndicatorEnum;
 import com.xlg.component.enums.RoleEnum;
 import com.xlg.component.enums.TaskStatusEnum;
 import com.xlg.component.model.XlgTask;
 import com.xlg.component.model.XlgTaskCondition;
+import com.xlg.component.model.XlgTaskFinishDetail;
 import com.xlg.component.model.XlgUser;
 import com.xlg.component.service.XlgTaskConditionService;
+import com.xlg.component.service.XlgTaskFinishDetailService;
 import com.xlg.component.service.XlgTaskService;
 import com.xlg.component.service.XlgTaskUserProgressService;
 import com.xlg.component.service.XlgTaskUserService;
@@ -81,7 +83,7 @@ public class TeacherTaskController {
     @Autowired
     private XlgTaskUserProgressService xlgTaskUserProgressService;
     @Autowired
-    private XlgTaskUserDAO xlgTaskUserDAO;
+    private XlgTaskFinishDetailService xlgTaskFinishDetailService;
 
     /**
      * 页面跳转
@@ -129,9 +131,9 @@ public class TeacherTaskController {
             long userFinished = taskIdTOUserFinishedMap.get(task.getId());
             TeacherTask show = new TeacherTask();
             show.setCreator(xlgUserService.format(task.getCreateId()));
-            show.setCreateTime(DateUtils.format(task.getCreateTime()));
-            show.setEndTime(DateUtils.format(task.getEndTime()));
-            show.setStartTime(DateUtils.format(task.getStartTime()));
+            show.setCreateTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getCreateTime()));
+            show.setEndTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getEndTime()));
+            show.setStartTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getStartTime()));
             show.setStatus(TaskStatusEnum.fromValue(task.getStatus()).getDesc());
             show.setTaskDesc(task.getDescription());
             show.setTaskName(task.getName());
@@ -211,9 +213,9 @@ public class TeacherTaskController {
             long userFinished = taskIdTOUserFinishedMap.get(task.getId());
             TeacherTask show = new TeacherTask();
             show.setCreator(xlgUserService.format(task.getCreateId()));
-            show.setCreateTime(DateUtils.format(task.getCreateTime()));
-            show.setEndTime(DateUtils.format(task.getEndTime()));
-            show.setStartTime(DateUtils.format(task.getStartTime()));
+            show.setCreateTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getCreateTime()));
+            show.setEndTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getEndTime()));
+            show.setStartTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getStartTime()));
             show.setStatus(TaskStatusEnum.fromValue(task.getStatus()).getDesc());
             show.setTaskDesc(task.getDescription());
             show.setTaskName(task.getName());
@@ -306,16 +308,17 @@ public class TeacherTaskController {
         List<Long> dataList = Lists.newArrayList();
         List<Long> finishedUserIdList = xlgTaskUserProgressService.getStatusByTaskId(taskId, Lists.newArrayList(FINISHED.getValue()));
         List<Long> unfinishedUserIdList = xlgTaskUserProgressService.getStatusByTaskId(taskId, Lists.newArrayList(UNFINISHED.getValue(),
-                DOING.getValue()));
+                DOING.getValue(), UNKNOWN.getValue()));
 
         dataList.addAll(finishedUserIdList);
         dataList.addAll(unfinishedUserIdList);
         Workbook workbook = ExcelUtils.createWorkBook();
         Sheet sheet = workbook.createSheet();
         ExcelUtils.writeHeader(sheet,
-                ImmutableList.of("已完成学生学号", "已完成学生姓名", "未完成学生学号", "未完成学生姓名"));
+                ImmutableList.of("已完成学生学号", "已完成学生姓名", "已完成学生作业", "未完成学生学号", "未完成学生姓名"));
 
-
+        System.out.println(JSON.toJSONString(finishedUserIdList));
+        System.out.println(JSON.toJSONString(unfinishedUserIdList));
         if (isNotEmpty(finishedUserIdList) || isNotEmpty(unfinishedUserIdList)) {
             int finishedSize = finishedUserIdList.size();
             int unfinishedSize = unfinishedUserIdList.size();
@@ -324,10 +327,19 @@ public class TeacherTaskController {
                 if (finishedSize <= 0) {
                     values.add("");
                     values.add("");
+                    values.add("");
                 } else {
                     long createId = finishedUserIdList.get(finishedUserIdList.size() - finishedSize);
                     values.add(createId);
                     values.add(xlgUserService.format(createId));
+                    XlgTaskFinishDetail detail = xlgTaskFinishDetailService
+                            .getTaskIdAndUserId(taskId, createId, IndicatorEnum.UPLOAD_WORK.getValue());
+                    String fileUrl = "";
+                    if (detail != null) {
+                        UploadFile uploadFile = JSON.parseObject(detail.getExtParams(), UploadFile.class);
+                        fileUrl = uploadFile.getUrl();
+                    }
+                    values.add(fileUrl);
                 }
                 if (unfinishedSize <= 0) {
                     values.add("");

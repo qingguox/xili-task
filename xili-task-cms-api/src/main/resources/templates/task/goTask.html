@@ -158,7 +158,6 @@
                 var json1 = {};
                 var json2 = {};
                 var indFileList = vm.indFileList[0];
-                alert(indFileList)
                 if(JSON.stringify(vm.indFileList)=='[]') {
                     json1 = {
                         'status' : item.status,
@@ -176,6 +175,17 @@
                     };
                     json = json2;
                 }
+                // 上传文件，必须要有文件
+                if (item.status == 1) {
+                    if (JSON.stringify(vm.indFileList)=='[]') {
+                        console.log("上传文件指标，没有文件，则无法去提交!!")
+                        this.$message.error('请上传文件！！！');
+                        // vm.$Notice.error({
+                        //     desc:  "请上传文件！！！"
+                        // });
+                        return;
+                    }
+                }
                 $.ajax({
                     url:"../student/task/todo",
                     type:"post",
@@ -185,7 +195,10 @@
                     success: function(result) {
                         console.log(result.code)
                         if(result.code == "200"){
-                            window.parent.location.reload();
+                            vm.$Notice.success({
+                                desc:  result.msg
+                            });
+                            //window.parent.location.reload();
                             //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
                         }else{
                             vm.$Notice.error({
@@ -247,35 +260,7 @@
             },
             //新建任务(略简单)
             acceptClick : function(){
-                //Validate不起作用MD
-                var quartz =  vm.formQuartz;
-                if(vm.formQuartz.taskName==""||vm.formQuartz.taskDesc==""||vm.formQuartz.time==""){
-                    alert("请输入以上完整信息");
-                    return;
-                }
-                $.ajax({
-                    url:"../task/edit",
-                    type:"post",
-                    data: {
-                        "taskName": quartz.taskName,
-                        "taskDesc": quartz.taskDesc,
-                        "startTime": quartz.time[0],
-                        "endTime": quartz.time[1],
-                        "file": vm.fileList[0],      // name and url
-                        "indFile" : vm.fileList[0],
-                    },
-                    success: function(result) {
-                        if(result.code=="200"){
-                            this.$message.success(result.msg);//文件上传错误提示
-                            window.parent.location.reload();
-                            //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
-                        }else{
-                            vm.$Notice.error({
-                                desc:  '系统异常'
-                            });
-                        }
-                    }
-                });
+                window.parent.location.reload();
             },
             beforeUpload(file){
                 const isLt100M = file.size / 1024 / 1024 / 1024 < 11;

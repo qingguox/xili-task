@@ -26,4 +26,14 @@ public class XlgTaskUserProgressItemServiceImpl implements XlgTaskUserProgressIt
         return xlgTaskUserProgressItemDAO.batchInsert(list);
     }
 
+    @Override
+    public List<XlgTaskUserProgressItem> getByProgressIdAndUserId(long progressId, long userId) {
+        return xlgTaskUserProgressItemDAO.getByProgressIdAndUserId(progressId, userId);
+    }
+
+    @Override
+    public int batchUpdate(List<XlgTaskUserProgressItem> xlgTaskUserProgressItemList) {
+        return xlgTaskUserProgressItemDAO.batchUpdate(xlgTaskUserProgressItemList);
+    }
+
 }

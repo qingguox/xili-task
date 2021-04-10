@@ -121,9 +121,9 @@ public class TaskController {
             });
             TaskShow show = new TaskShow();
             show.setCreator(xlgUserService.format(task.getCreateId()));
-            show.setCreateTime(DateUtils.format(task.getCreateTime()));
-            show.setEndTime(DateUtils.format(task.getEndTime()));
-            show.setStartTime(DateUtils.format(task.getStartTime()));
+            show.setCreateTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getCreateTime()));
+            show.setEndTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getEndTime()));
+            show.setStartTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getStartTime()));
             show.setStatus(TaskStatusEnum.fromValue(task.getStatus()).getDesc());
             show.setTaskDesc(task.getDescription());
             show.setTaskName(task.getName());
@@ -177,9 +177,9 @@ public class TaskController {
             });
             TaskShow show = new TaskShow();
             show.setCreator(xlgUserService.format(task.getCreateId()));
-            show.setCreateTime(DateUtils.format(task.getCreateTime()));
-            show.setEndTime(DateUtils.format(task.getEndTime()));
-            show.setStartTime(DateUtils.format(task.getStartTime()));
+            show.setCreateTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getCreateTime()));
+            show.setEndTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getEndTime()));
+            show.setStartTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getStartTime()));
             show.setStatus(TaskStatusEnum.fromValue(task.getStatus()).getDesc());
             show.setTaskDesc(task.getDescription());
             show.setTaskName(task.getName());

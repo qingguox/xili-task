@@ -387,13 +387,14 @@
                         top.frames[iframeId].vm.formQuartz.file = task.file;
                         top.frames[iframeId].vm.form.dynamicItem = task.conditionList;
                         top.frames[iframeId].vm.formQuartz.indFile = task.indFile;
+                        top.frames[iframeId].vm.formQuartz.uploadFile = task.uploadFile;
                     },
                     yes: function (iframeId) {
                         top.frames[iframeId].vm.acceptClick();
                     },
                 });
             },
-            //查看任务
+            //去完成任务
             goTask: function (task) {
                 dialogOpen({
                     title: '去完成',

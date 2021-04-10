@@ -44,6 +44,7 @@ public class XlgTaskUserProgressItem {
 
     /**
      * 状态 [0:未知, 1:进行,中 2:已完成, 3: 未完成]
+     * {@link com.xlg.component.enums.UserProgressStatusEnum}
      */
     private int status;
 

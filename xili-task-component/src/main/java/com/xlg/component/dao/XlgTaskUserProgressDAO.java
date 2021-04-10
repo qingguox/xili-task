@@ -85,4 +85,20 @@ public class XlgTaskUserProgressDAO {
                 .addValue("taskIds", taskIds),
                 new BeanPropertyRowMapper<>(XlgTaskUserProgress.class));
     }
+
+    public int updateStatus(long progressId, int status) {
+        String sql = "update " + table + " set status=:status, update_time=:updateTime where id=:progressId";
+        return namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource()
+                .addValue("status", status)
+                .addValue("progressId", progressId)
+                .addValue("updateTime", System.currentTimeMillis()));
+    }
+
+    public int updateFinishedCount(long progressId, long finishedCount) {
+        String sql = "update " + table + " set finished=:finished, update_time=:updateTime where id=:progressId";
+        return namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource()
+                .addValue("finished", finishedCount)
+                .addValue("progressId", progressId)
+                .addValue("updateTime", System.currentTimeMillis()));
+    }
 }

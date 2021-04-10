@@ -1,8 +1,8 @@
 package com.xlg.cms.api.utils;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 
 /**
  * @author wangqingwei <wangqingwei@kuaishou.com>
@@ -10,19 +10,19 @@ import java.util.Date;
  */
 public class DateUtils {
 
-    private static SimpleDateFormat dft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final DateTimeFormatter YYYY_MM_DD_HHMMSS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    public static final DateTimeFormatter YYYY_MM_DD = DateTimeFormat.forPattern("yyyyMMdd");
 
-    public static long parseLong(String date) throws ParseException {
-        return dft.parse(date).getTime();
-    }
-
-
-    public static String format(long time) {
-        Date date = new Date();
-        date.setTime(time);
-        return dft.format(date);
-    }
-
-
+//    public static long parseLong(String date) throws ParseException {
+//        return dft.parse(date).getTime();
+//    }
+//
+//    public static String format(long time) {
+//        Date date = new Date();
+//        date.setTime(time);
+//        return dft.format(date);
+//    }
 
 }
+
+

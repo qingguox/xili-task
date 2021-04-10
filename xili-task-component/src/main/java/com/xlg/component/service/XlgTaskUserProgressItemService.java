@@ -11,4 +11,7 @@ public interface XlgTaskUserProgressItemService {
 
     int batchInsert(List<XlgTaskUserProgressItem> list);
 
+    List<XlgTaskUserProgressItem> getByProgressIdAndUserId(long progressId, long userId);
+
+    int batchUpdate(List<XlgTaskUserProgressItem> xlgTaskUserProgressItemList);
 }

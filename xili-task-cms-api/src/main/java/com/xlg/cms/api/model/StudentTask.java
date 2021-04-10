@@ -7,6 +7,7 @@ package com.xlg.cms.api.model;
 public class StudentTask extends TeacherTask {
 
     private int userFinished;
+    public UploadFile uploadFile;
 
     public int getUserFinished() {
         return userFinished;
@@ -14,5 +15,13 @@ public class StudentTask extends TeacherTask {
 
     public void setUserFinished(int userFinished) {
         this.userFinished = userFinished;
+    }
+
+    public UploadFile getUploadFile() {
+        return uploadFile;
+    }
+
+    public void setUploadFile(UploadFile uploadFile) {
+        this.uploadFile = uploadFile;
     }
 }

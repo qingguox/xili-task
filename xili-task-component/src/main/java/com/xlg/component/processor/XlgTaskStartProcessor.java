@@ -15,6 +15,7 @@ import com.xlg.component.enums.TaskStatusEnum;
 import com.xlg.component.enums.TaskType;
 import com.xlg.component.model.XlgTask;
 import com.xlg.component.service.XlgTaskService;
+import com.xlg.component.service.XlgTaskUserProgressService;
 
 /**
  * @author wangqingwei <wangqingwei@kuaishou.com>
@@ -28,6 +29,8 @@ public class XlgTaskStartProcessor implements XlgTaskStatusChangedProcessor {
 
     @Autowired
     private XlgTaskService xlgTaskService;
+    @Autowired
+    private XlgTaskUserProgressService xlgTaskUserProgressService;
 
     @Override
     public boolean support(TaskType taskType) {

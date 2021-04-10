@@ -4,7 +4,9 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -48,5 +50,17 @@ public class XlgRegisterDAO {
                 .addValue("status", status)
                 .addValue("updateTime", time);
         return namedParameterJdbcTemplate.update(sql, source);
+    }
+
+    public XlgRegister getByTaskIdAndTimeAndStatus(long taskId, long actionTime, int status) {
+        String sql = "select * from " + table
+                + " where task_id =:taskId and start_time<=:actionTime and end_time>=:actionTime and status =:status";
+        MapSqlParameterSource source = new MapSqlParameterSource()
+                .addValue("taskId", taskId)
+                .addValue("status", status)
+                .addValue("actionTime", actionTime);
+        List<XlgRegister> registerList =
+                namedParameterJdbcTemplate.query(sql, source, new BeanPropertyRowMapper<>(XlgRegister.class));
+        return CollectionUtils.isNotEmpty(registerList) ? registerList.get(0) : null;
     }
 }

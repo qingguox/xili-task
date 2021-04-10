@@ -48,7 +48,7 @@
                 <el-link type="success" @click="download(formQuartz.file)" > {{ formQuartz.file.name }}
                 </el-link>
             </Form-item>
-            <el-button @click="addItem" type="primary">添加任务条件</el-button><br/><br/><br/>
+            <el-button @click="addItem" type="primary" :disabled="true">添加任务条件</el-button><br/><br/><br/>
             <div v-for="(item, index) in form.dynamicItem" :key="index">
                 <div style="height: 50px; width: 500px;box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)">
                     <i-select v-model="item.status" style="width: 300px" :disabled="true">

@@ -68,4 +68,24 @@ public class XlgTaskUserProgressServiceImpl implements XlgTaskUserProgressServic
         return ListUtils.emptyIfNull(progressList);
     }
 
+    @Override
+    public XlgTaskUserProgress getByTaskIdAndUserId(long taskId, long userId) {
+        List<XlgTaskUserProgress> progressList =
+                xlgTaskUserProgressDAO.getByTaskIdAndUserId(Lists.newArrayList(taskId), userId);
+        if (CollectionUtils.isEmpty(progressList)) {
+            return null;
+        }
+        return progressList.get(0);
+    }
+
+    @Override
+    public int updateStatus(long progressId, int status) {
+        return xlgTaskUserProgressDAO.updateStatus(progressId, status);
+    }
+
+    @Override
+    public int updateFinishedCount(long progressId, long finishedItemSize) {
+        return xlgTaskUserProgressDAO.updateFinishedCount(progressId, finishedItemSize);
+    }
+
 }

@@ -62,6 +62,8 @@
                     </i-select>
                     <el-link v-if="item.status == 2" type="success" @click="download(formQuartz.indFile)" > {{ formQuartz.indFile.name }}
                     </el-link>
+                    <el-link v-if="item.status == 1" type="success" @click="download(formQuartz.uploadFile)" > {{ formQuartz.uploadFile.name }}
+                    </el-link>
                 </div><br/><br/><br/>
             </div>
         </i-form>
@@ -91,6 +93,10 @@
                     url : "",
                 },
                 indFile : {
+                    name : "",
+                    url : "",
+                },
+                uploadFile : {
                     name : "",
                     url : "",
                 },
@@ -174,34 +180,7 @@
             },
             //新建任务(略简单)
             acceptClick : function(){
-                //Validate不起作用MD
-                var quartz =  vm.formQuartz;
-                if(vm.formQuartz.taskName==""||vm.formQuartz.taskDesc==""||vm.formQuartz.time==""){
-                    alert("请输入以上完整信息");
-                    return;
-                }
-                $.ajax({
-                    url:"../task/add",
-                    type:"post",
-                    data: {
-                        "taskName": quartz.taskName,
-                        "taskDesc": quartz.taskDesc,
-                        "startTime": quartz.time[0],
-                        "endTime": quartz.time[1],
-                        "file": vm.fileList[0],      // name and url
-                        "indFile" : vm.fileList[0],
-                    },
-                    success: function(result) {
-                        if(result.code=="200"){
-                            window.parent.location.reload();
-                            //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
-                        }else{
-                            vm.$Notice.error({
-                                desc:  '系统异常'
-                            });
-                        }
-                    }
-                });
+                window.parent.location.reload();
             },
             handleRemove(file, fileList) {
                 console.log(file, fileList);

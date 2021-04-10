@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.context.annotation.Lazy;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -44,4 +45,24 @@ public class XlgTaskUserProgressItemDAO {
         return namedParameterJdbcTemplate.batchUpdate(sql, parameterSources).length;
     }
 
+    public List<XlgTaskUserProgressItem> getByProgressIdAndUserId(long progressId, long userId) {
+        String sql = "select * from " + table + " where progress_id=:progressId and user_id=:userId";
+        return namedParameterJdbcTemplate.query(sql, new MapSqlParameterSource()
+                .addValue("progressId", progressId)
+                .addValue("userId", userId), new BeanPropertyRowMapper<>(XlgTaskUserProgressItem.class));
+    }
+
+    public int batchUpdate(List<XlgTaskUserProgressItem> list) {
+        long nowTime = System.currentTimeMillis();
+        String sql = "update " + table + " set action_value=:actionValue, status=:status, update_time=:updateTime where id =:id";
+        MapSqlParameterSource[] parameterSources = list.stream()
+                .map(e -> new MapSqlParameterSource()
+                        .addValue("actionValue", e.getActionValue())
+                        .addValue("status", e.getStatus())
+                        .addValue("updateTime", nowTime)
+                        .addValue("id", e.getId())
+                )
+                .toArray(MapSqlParameterSource[]::new);
+        return namedParameterJdbcTemplate.batchUpdate(sql, parameterSources).length;
+    }
 }

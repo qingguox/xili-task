@@ -47,17 +47,20 @@ import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
+import com.xlg.component.dto.XlgTaskUserProgressDTO;
 import com.xlg.component.enums.IndicatorEnum;
 import com.xlg.component.enums.RoleEnum;
 import com.xlg.component.enums.TaskStatusEnum;
 import com.xlg.component.model.XlgTask;
 import com.xlg.component.model.XlgTaskCondition;
+import com.xlg.component.model.XlgTaskFinishDetail;
 import com.xlg.component.model.XlgTaskUserProgress;
 import com.xlg.component.model.XlgUser;
 import com.xlg.component.service.XlgTaskConditionService;
+import com.xlg.component.service.XlgTaskFinishDetailService;
 import com.xlg.component.service.XlgTaskService;
+import com.xlg.component.service.XlgTaskUserProgressProcessService;
 import com.xlg.component.service.XlgTaskUserProgressService;
-import com.xlg.component.service.XlgTaskUserService;
 import com.xlg.component.service.XlgUserService;
 
 /**
@@ -78,7 +81,9 @@ public class StudentTaskController {
     @Autowired
     private XlgTaskConditionService xlgTaskConditionService;
     @Autowired
-    private XlgTaskUserService xlgTaskUserService;
+    private XlgTaskFinishDetailService xlgTaskFinishDetailService;
+    @Autowired
+    private XlgTaskUserProgressProcessService xlgTaskUserProgressProcessService;
 
     /**
      * 页面跳转
@@ -171,17 +176,24 @@ public class StudentTaskController {
                     indFile.set(JSON.parseObject(condition.getExtParams(), UploadFile.class));
                 }
             });
+            XlgTaskFinishDetail detail = xlgTaskFinishDetailService
+                    .getTaskIdAndUserId(curTask.getId(), curUserId, IndicatorEnum.UPLOAD_WORK.getValue());
+            String extParams = "";
+            if (detail != null) {
+                extParams =  detail.getExtParams();
+            }
             StudentTask task = new StudentTask();
             task.setTaskId(curTask.getId());
             task.setTaskName(curTask.getName());
-            task.setStartTime(DateUtils.format(curTask.getStartTime()));
-            task.setEndTime(DateUtils.format(curTask.getEndTime()));
+            task.setStartTime(DateUtils.YYYY_MM_DD_HHMMSS.print(curTask.getStartTime()));
+            task.setEndTime(DateUtils.YYYY_MM_DD_HHMMSS.print(curTask.getEndTime()));
             task.setStatus(TaskStatusEnum.fromValue(curTask.getStatus()).getDesc());
-            task.setCreateTime(DateUtils.format(curTask.getCreateTime()));
+            task.setCreateTime(DateUtils.YYYY_MM_DD_HHMMSS.print(curTask.getCreateTime()));
             task.setTaskDesc(curTask.getDescription());
             task.setCreator(xlgUserService.format(curTask.getCreateId()));
             task.setFile(JSON.parseObject(curTask.getExtParams(), UploadFile.class));
             task.setIndFile(indFile.get());
+            task.setUploadFile(JSON.parseObject(extParams, UploadFile.class));
             task.setConditionList(conditionInfoList);
             task.setUserFinished(
                     curProgress.getStatus() == FINISHED.getValue() ? FINISHED.getValue() : UNFINISHED.getValue());
@@ -320,11 +332,42 @@ public class StudentTaskController {
         }
     }
 
+    /**
+     * 去完成任务
+     * @param taskToFinished
+     * @param request
+     * @return
+     */
     @PostMapping("/todo")
     @ResponseBody
-    public Result toDo(@RequestBody TaskToFinished taskToFinished) {
+    public Result toDo(@RequestBody TaskToFinished taskToFinished, HttpServletRequest request) {
         logger.info("[StudentTaskController] receive taskToFinished={}", JSON.toJSONString(taskToFinished));
+        // TODO 改成一个adminId 一样
+        Object user = request.getSession().getAttribute("user");
+        long curUserId = 0;
+        if (user != null) {
+            curUserId = Long.parseLong((String) user);
+        }
+        // 指标值
+        long indicator = taskToFinished.getStatus();
+        long taskId = taskToFinished.getTaskId();
+        UploadFile indFile = taskToFinished.getIndFile();
+
+        long currentMills = System.currentTimeMillis();
+        int actionDate = Integer.parseInt(DateUtils.YYYY_MM_DD.print(currentMills));
+        // 1. 构造进度DTO
+        XlgTaskUserProgressDTO userProgressDTO = new XlgTaskUserProgressDTO();
+        userProgressDTO.setUserId(curUserId);
+        userProgressDTO.setIndicator(indicator);
+        userProgressDTO.setTaskId(taskId);
+        userProgressDTO.setActionValue(1);
+        userProgressDTO.setActionDate(actionDate);
+        userProgressDTO.setActionTime(currentMills);
+        userProgressDTO.setExtParams(JSON.toJSONString(Optional.ofNullable(indFile).orElse(new UploadFile())));
+        // 2. 调用进度的处理
+        logger.info("[StudentTaskController] send to progress start userProgressDTO={}", JSON.toJSONString(userProgressDTO));
+        xlgTaskUserProgressProcessService.processProgress(userProgressDTO);
+        logger.info("[StudentTaskController] send to progress end");
         return Result.ok("提交成功!!");
     }
-
 }
