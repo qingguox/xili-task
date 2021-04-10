@@ -41,12 +41,12 @@ public class XlgRegisterDAO {
         return namedParameterJdbcTemplate.batchUpdate(sql, parameterSources).length;
     }
 
-    public void updateStatus(long taskId, long time, int status) {
+    public int updateStatus(long taskId, long time, int status) {
         String sql = "update " + table + " set status =:status, update_time =:updateTime where task_id =:taskId";
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("taskId", taskId)
                 .addValue("status", status)
                 .addValue("updateTime", time);
-        namedParameterJdbcTemplate.update(sql, source);
+        return namedParameterJdbcTemplate.update(sql, source);
     }
 }

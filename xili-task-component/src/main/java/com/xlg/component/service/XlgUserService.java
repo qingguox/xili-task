@@ -3,6 +3,7 @@ package com.xlg.component.service;
 import java.util.List;
 
 import com.xlg.component.common.Page;
+import com.xlg.component.enums.AllStatusEnum;
 import com.xlg.component.model.XlgUser;
 
 /*
@@ -22,4 +23,6 @@ public interface XlgUserService {
     int update(XlgUser user);
 
     long formatNameToCreateId(String creator);
+
+    AllStatusEnum hasUser(long userId, String passwordFromMd5);
 }

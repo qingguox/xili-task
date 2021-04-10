@@ -21,9 +21,10 @@ public class MyWebMvcConfigurer implements WebMvcConfigurer {
         //注册拦截器 拦截规则
         //多个拦截器时 以此添加 执行顺序按添加顺序
         registry.addInterceptor(adminHandlerInterceptor).addPathPatterns("/**")
-                .excludePathPatterns("", "/", "/login", "/login.html", "/logout", "/error", "/error/", "/captcha",
-                        "/js/**", "/html/**", "/image/**", "/css/**", "/favicon.ico", "/libs/*", "/layer/*", "*.js",
-                        "/iview/*", "/AdminLTE/*", "/font-awesome/*", "/bootstrap/*", "*.css");
+                .excludePathPatterns("", "/", "/login", "/login.html", "/logout", "loginMsg.js", "/error", "/error/", "/captcha",
+                        "/js/**", "/html/**", "/image/**", "/css/**", "/favicon.ico", "/libs/**", "/layer/**", "**.js",
+                        "/iview/**", "/AdminLTE/**", "/bootstrap/**", "**.css", "*.css", "*.js", "files.css", "***.css",
+                        "***.js", "/font-awesome/**", "/rmqsend*", "/file*");
 
     }
 

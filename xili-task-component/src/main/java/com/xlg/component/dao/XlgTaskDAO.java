@@ -24,7 +24,8 @@ import com.xlg.component.model.XlgTask;
 public class XlgTaskDAO {
     private final String table = "xlg_task";
     private final String columns = "name,description,status,create_id,ext_params,create_time,start_time,end_time";
-    private final String propertiesPlaceholder = ":name,:description,:status,:createId,:extParams,:createTime,:startTime,:endTime";
+    private final String propertiesPlaceholder =
+            ":name,:description,:status,:createId,:extParams,:createTime,:startTime,:endTime";
     private final String all_columns = "id," + columns;
     @Resource
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -51,26 +52,26 @@ public class XlgTaskDAO {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         String sql = "insert into " + table + " (" + columns + ") values (" + propertiesPlaceholder + ")";
         MapSqlParameterSource parameterSource = new MapSqlParameterSource()
-                        .addValue("name", e.getName())
-                        .addValue("description", e.getDescription())
-                        .addValue("status", e.getStatus())
-                        .addValue("createId", e.getCreateId())
-                        .addValue("extParams", e.getExtParams())
-                        .addValue("createTime", e.getCreateTime())
-                        .addValue("startTime", e.getStartTime())
-                        .addValue("endTime", e.getEndTime())
+                .addValue("name", e.getName())
+                .addValue("description", e.getDescription())
+                .addValue("status", e.getStatus())
+                .addValue("createId", e.getCreateId())
+                .addValue("extParams", e.getExtParams())
+                .addValue("createTime", e.getCreateTime())
+                .addValue("startTime", e.getStartTime())
+                .addValue("endTime", e.getEndTime())
                 .addValue("updateTime", e.getCreateTime());
         namedParameterJdbcTemplate.update(sql, parameterSource, keyHolder);
         return keyHolder.getKey().longValue();
     }
 
-    public void updateStatus(long taskId, long time, int status) {
+    public int updateStatus(long taskId, long time, int status) {
         String sql = "update " + table + " set status =:status, update_time =:updateTime where id =:taskId";
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("taskId", taskId)
                 .addValue("status", status)
                 .addValue("updateTime", time);
-        namedParameterJdbcTemplate.update(sql, source);
+        return namedParameterJdbcTemplate.update(sql, source);
     }
 
     public List<XlgTask> getAllTaskByPage(XlgTask model, int offset, int limit) {
@@ -82,7 +83,8 @@ public class XlgTaskDAO {
 
     public int update(XlgTask model) {
         model.setUpdateTime(System.currentTimeMillis());
-        String sql = "update " + table + " set name=:name, description=:description,update_time=:updateTime where id=:id ";
+        String sql =
+                "update " + table + " set name=:name, description=:description,update_time=:updateTime where id=:id ";
         return namedParameterJdbcTemplate.update(sql,
                 new MapSqlParameterSource("name", model.getName())
                         .addValue("description", model.getDescription())
@@ -138,4 +140,9 @@ public class XlgTaskDAO {
         return Tuple.tuple(conditionSql, source);
     }
 
+    public List<XlgTask> getTaskByIds(List<Long> taskIdList) {
+        String sql = "select * from " + table + " where id in (:taskIdList)";
+        return namedParameterJdbcTemplate.query(sql, new MapSqlParameterSource("taskIdList", taskIdList),
+                new BeanPropertyRowMapper<>(XlgTask.class));
+    }
 }

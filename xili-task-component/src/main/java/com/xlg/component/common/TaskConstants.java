@@ -9,4 +9,7 @@ public class TaskConstants {
     public static final int ZERO = 0;
     public static final int ONE = 1;
 
+    public static final int ONE_THOUSAND = 1000;
+    public static final int THREE_THOUSAND = 3000;
+
 }

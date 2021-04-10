@@ -8,8 +8,11 @@ import javax.annotation.Resource;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson.JSON;
 import com.xlg.component.common.Page;
 import com.xlg.component.dao.XlgUserDAO;
+import com.xlg.component.dto.XlgUserExtParams;
+import com.xlg.component.enums.AllStatusEnum;
 import com.xlg.component.model.XlgUser;
 import com.xlg.component.service.XlgUserService;
 
@@ -54,6 +57,20 @@ public class XlgUserServiceImpl implements XlgUserService {
     public long formatNameToCreateId(String creator) {
         XlgUser user = xlgUserDAO.getByName(creator);
         return Optional.ofNullable(user.getUserId()).orElse(0L);
+    }
+
+    @Override
+    public AllStatusEnum hasUser(long userId, String passwordFromMd5) {
+        XlgUser byUserId = xlgUserDAO.getByUserId(userId);
+        if (byUserId == null) {
+            return AllStatusEnum.UNKNOWN;
+        }
+        String extParams = byUserId.getExtParams();
+        XlgUserExtParams xlgUserExtParams = JSON.parseObject(extParams, XlgUserExtParams.class);
+        if (!xlgUserExtParams.getPasswordFromMd5().equals(passwordFromMd5)) {
+            return AllStatusEnum.TACH;
+        }
+        return AllStatusEnum.DETACH;
     }
 
 }

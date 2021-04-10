@@ -1,17 +1,25 @@
 package com.xlg.cms.api.controller;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.xlg.component.service.XlgUserService;
+
 @Controller
 public class IndexController {
 
     private Logger logger = LoggerFactory.getLogger(IndexController.class);
+
+    @Autowired
+    private XlgUserService xlgUserService;
 
     /**
      * 页面跳转
@@ -45,7 +53,7 @@ public class IndexController {
     @GetMapping("{module}/{url}.html")
     public String page(@PathVariable("module") String module,
             @PathVariable("url") String url,
-            Model model) {
+            Model model, HttpServletRequest request) {
         return module + "/" + url;
     }
 }

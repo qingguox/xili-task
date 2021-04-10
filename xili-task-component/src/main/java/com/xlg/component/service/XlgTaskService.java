@@ -17,7 +17,9 @@ public interface XlgTaskService {
 
     List<XlgTask> getAllTaskByPage(Page page, XlgTask request);
 
-    void updateStatus(long taskId, long time, int status);
+    int updateStatus(long taskId, long time, int status);
 
     int update(XlgTask task);
+
+    List<XlgTask> getTaskByIds(List<Long> taskIdList);
 }

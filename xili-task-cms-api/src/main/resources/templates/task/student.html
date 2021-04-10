@@ -59,7 +59,6 @@
         </template>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <i-button type="primary" @click="search()" icon="ios-search">查询</i-button>&nbsp;&nbsp;
-        <i-button type="primary" @click="create()" icon="ios-reload">创建任务</i-button>&nbsp;&nbsp;
         <i-button type="primary" @click="taskExport()" icon="ios-reload">导出列表</i-button>&nbsp;&nbsp;
         <i-button type="primary" @click="click()">打印选择的时间</i-button>
     </div>
@@ -99,8 +98,9 @@
             options: [
             ],
             options1: [
-                {value: 1, desc: '完成'},
-                {value: 0, desc: '未完成'},
+                {value: 0, desc: '请选择'},
+                {value: 2, desc: '完成'},
+                {value: 3, desc: '未完成'},
             ],
             tableTitle: [{
                 key: "taskId",
@@ -196,22 +196,64 @@
             },
             //搜索
             search: function () {
+                let taskId = this.taskId;
+                let taskName = this.taskName;
+                let status = this.status;
+                let creator = this.creator;
+                let taskDesc = this.taskDesc;
+                let finished = this.userFinished;
+                if(taskId==""){
+                    taskId = 0
+                }
+                if(taskName==""){
+                    taskName = ""
+                }
+                if(status==""){
+                    status = 0
+                }
+                if(creator==""){
+                    creator = ""
+                }
+                if(taskDesc==""){
+                    taskDesc = ""
+                }
+                if(finished==""){
+                    finished = 0
+                }
+                let startTime = 0;
+                let endTime = 0;
+                if (this.time == null || Object.keys(this.time).length==0) {
+                    startTime = 0
+                    endTime = 0
+                } else {
+                    startTime = new Date(this.time[0]).getTime();
+                    endTime = new Date(this.time[1]).getTime();
+                }
                 $.ajax({
-                    url: "../task/search",
+                    url: "../student/task/search",
                     type: "post",
                     data: {
-                        'task': this.taskId,
-                        "taskName": this.taskName,
-                        'status': this.status,
-                        "creator": this.creator,
-                        "taskDesc": this.taskDesc,
-                        "startTime": this.time[0],
-                        "endTime": this.time[1],
+                        'taskId': taskId,
+                        "taskName": taskName,
+                        'status': status,
+                        "creator": creator,
+                        "taskDesc": taskDesc,
+                        "startTime": startTime,
+                        "endTime": endTime,
+                        'finished': finished,
                         'pageSize': this.pageSize,
                         'pageNo': this.pageNo,
                     },
                     success: function (result) {
                         vm.JobData = result.msg;
+                        for (var i=0; i<vm.JobData.length;i++) {
+                            if (vm.JobData[i].userFinished == 2) {
+                                vm.JobData[i].userFinishSow = "完成"
+                            }
+                            if (vm.JobData[i].userFinished == 3) {
+                                vm.JobData[i].userFinishSow = "未完成"
+                            }
+                        }
                     }
                 });
             },
@@ -229,36 +271,73 @@
             },
             // 任务列表导出
             taskExport: function () {
-                alert("任务列表到处")
-                $.ajax({
-                    url: "../task/export",
-                    type: "post",
-                    data: {'time': (new Date()).toString(), 'taskId': this.taskId},
-                    success: function (result) {
-                        if (result.code == "200") {
-                            vm.$Notice.success({
-                                desc: '查看任务成功'
-                            });
-                            vm.list();
-                        }
-                    }
-                });
-            },
-            //新建任务(略简单)
-            create: function () {
-                dialogOpen({
-                    title: '新增',
-                    url: 'task/add.html',
-                    scroll: true,
-                    width: '1000px',
-                    height: '1000px',
-                    success: function (iframeId) {
+                let taskId = this.taskId;
+                let taskName = this.taskName;
+                let status = this.status;
+                let creator = this.creator;
+                let taskDesc = this.taskDesc;
+                let finished = this.userFinished;
+                if(taskId==""){
+                    taskId = 0
+                }
+                if(taskName==""){
+                    taskName = ""
+                }
+                if(status==""){
+                    status = 0
+                }
+                if(taskDesc==""){
+                    taskDesc = ""
+                }
+                if(creator==""){
+                    creator = 0
+                }
+                if (finished=="") {
+                    finished = 0
+                }
+                let startTime = 0;
+                let endTime = 0;
+                if (this.time == null || Object.keys(this.time).length==0) {
+                    startTime = 0
+                    endTime = 0
+                } else {
+                    startTime = new Date(this.time[0]).getTime();
+                    endTime = new Date(this.time[1]).getTime();
+                }
+                return axios.get('../student/task/export', {
+                    params: {
+                        'taskId': taskId,
+                        "taskName": taskName,
+                        'status': status,
+                        "creator": creator,
+                        "taskDesc": taskDesc,
+                        "startTime": startTime,
+                        "endTime": endTime,
+                        'finished': finished,
+                        'pageSize': this.pageSize,
+                        'pageNo': this.pageNo,
+                    },
+                    responseType: 'blob',
+                }).then((res) => {
+                    const link = document.createElement('a')
+                    const filename = decodeURI(res.headers['content-disposition'].split(';')[1].split('=')[1]) || '学生任务列表.xls'
+                    let blob = new Blob([res.data], {type: 'application/octet-stream'})
+                    link.style.display = 'none'
+                    link.href = URL.createObjectURL(blob)
 
-                    },
-                    yes: function (iframeId) {
-                        top.frames[iframeId].vm.acceptClick();
-                    },
-                });
+                    alert(filename)
+                    // link.download = res.headers['content-disposition'] //下载后文件名
+                    link.setAttribute('download', filename);
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                }).catch(error => {
+                    this.$Notice.error({
+                        title: '错误',
+                        desc: '网络连接错误'
+                    })
+                    console.log(error)
+                })
             },
             //任务列表(自行实现分页)
             list: function () {
@@ -269,17 +348,26 @@
                     success: function (result) {
                         vm.JobData = result.msg;
                         for (var i=0; i<vm.JobData.length;i++) {
-                            if (vm.JobData[i].userFinished == 1) {
+                            if (vm.JobData[i].userFinished == 2) {
                                 vm.JobData[i].userFinishSow = "完成"
                             }
-                            if (vm.JobData[i].userFinished == 0) {
+                            if (vm.JobData[i].userFinished == 3) {
                                 vm.JobData[i].userFinishSow = "未完成"
-                                vm.JobData[i].picName = "block"
+                                if (vm.JobData[i].status == "进行中") {
+                                    vm.JobData[i].picName = "block"
+                                }
                             }
                         }
                     },
-                    error: function (result) {
-                        this.$message.error('很抱歉，您没有权限!');
+                    error: function () {
+                        let code = 401
+                        let msg = "很抱歉，您没有权限！！！"
+                        if (code == 401) {
+                            vm.$Notice.error({
+                                desc:  msg
+                            });
+                            window.location.href = "task/index.html"
+                        }
                     }
                 });
             },
@@ -292,11 +380,13 @@
                     width: '1000px',
                     height: '1000px',
                     success: function (iframeId) {
-                        top.frames[iframeId].vm.formQuartz = task;
+                        top.frames[iframeId].vm.formQuartz.taskDesc = task.taskDesc;
+                        top.frames[iframeId].vm.formQuartz.taskId = task.taskId;
+                        top.frames[iframeId].vm.formQuartz.taskName = task.taskName;
                         top.frames[iframeId].vm.formQuartz.time = [task.startTime, task.endTime];
-                        top.frames[iframeId].vm.formQuartz.file = {name: 'food2.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'};
-                        top.frames[iframeId].vm.form.dynamicItem = [{status: 0}, {status: 1},{status: 2}];
-                        top.frames[iframeId].vm.formQuartz.indFile = {name: 'food3.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'};
+                        top.frames[iframeId].vm.formQuartz.file = task.file;
+                        top.frames[iframeId].vm.form.dynamicItem = task.conditionList;
+                        top.frames[iframeId].vm.formQuartz.indFile = task.indFile;
                     },
                     yes: function (iframeId) {
                         top.frames[iframeId].vm.acceptClick();
@@ -306,17 +396,19 @@
             //查看任务
             goTask: function (task) {
                 dialogOpen({
-                    title: '查看',
+                    title: '去完成',
                     url: 'task/goTask.html',
                     scroll: true,
                     width: '1000px',
                     height: '1000px',
                     success: function (iframeId) {
-                        top.frames[iframeId].vm.formQuartz = task;
+                        top.frames[iframeId].vm.formQuartz.taskDesc = task.taskDesc;
+                        top.frames[iframeId].vm.formQuartz.taskId = task.taskId;
+                        top.frames[iframeId].vm.formQuartz.taskName = task.taskName;
                         top.frames[iframeId].vm.formQuartz.time = [task.startTime, task.endTime];
-                        top.frames[iframeId].vm.formQuartz.file = {name: 'food2.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'};
-                        top.frames[iframeId].vm.form.dynamicItem = [{status: 0}, {status: 1},{status: 2}];
-                        top.frames[iframeId].vm.formQuartz.indFile = {name: 'food3.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'};
+                        top.frames[iframeId].vm.formQuartz.file = task.file;
+                        top.frames[iframeId].vm.form.dynamicItem = task.conditionList;
+                        //top.frames[iframeId].vm.formQuartz.indFile = task.indFile;
                     },
                     yes: function (iframeId) {
                         top.frames[iframeId].vm.acceptClick();

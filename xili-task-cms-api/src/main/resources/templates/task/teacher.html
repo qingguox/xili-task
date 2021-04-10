@@ -370,6 +370,16 @@
                     data: {'time': (new Date()).toString(), 'pageNo': this.pageNo, 'pageSize': this.pageSize},
                     success: function (result) {
                         vm.JobData = result.msg;
+                    },
+                    error: function (result) {
+                        let code = 401
+                        let msg = "很抱歉，您没有权限！！！"
+                        if (code == 401) {
+                            vm.$Notice.error({
+                                desc:  msg
+                            });
+                            window.location.href = "task/index.html"
+                        }
                     }
                 });
             },
