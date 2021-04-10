@@ -92,7 +92,7 @@ public class XlgUserDAO {
         }
         if (model.getUserId() != 0L) {
             buffer.append(" and user_id = :userId");
-            source.addValue("userId", "%" + model.getUserId() + "%");
+            source.addValue("userId", model.getUserId());
         }
         if (model.getName() != null && model.getName() != StringUtils.EMPTY) {
             buffer.append(" and name like :name");
@@ -110,7 +110,7 @@ public class XlgUserDAO {
             buffer.append(" and type = :type");
             source.addValue("type", model.getType());
         }
-        if (model.getCreateTime() != 0) {
+        if (model.getCreateTime() != 0L) {
             buffer.append(" and create_time = :createTime");
             source.addValue("createTime", model.getCreateTime());
         }

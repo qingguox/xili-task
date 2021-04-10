@@ -27,8 +27,8 @@ public class XlgRegisterServiceImpl implements XlgRegisterService {
     }
 
     @Override
-    public void updateStatus(long taskId, long time, int status) {
-        xlgRegisterDAO.updateStatus(taskId, time, status);
+    public int updateStatus(long taskId, long time, int status) {
+        return xlgRegisterDAO.updateStatus(taskId, time, status);
     }
 
 }

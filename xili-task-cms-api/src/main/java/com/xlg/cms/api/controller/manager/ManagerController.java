@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,6 +48,7 @@ import com.xlg.cms.api.model.UploadFile;
 import com.xlg.cms.api.utils.ExcelUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
+import com.xlg.component.dto.XlgUserExtParams;
 import com.xlg.component.enums.RoleEnum;
 import com.xlg.component.model.XlgUser;
 import com.xlg.component.service.XlgUserService;
@@ -74,6 +76,17 @@ public class ManagerController {
     public String page(Model model) {
         model.addAttribute("isCaptcha", true);
         return "manager";
+    }
+
+    /**
+     * 页面跳转
+     * @param
+     * @return
+     */
+    @RequestMapping("/mq")
+    public void mq(Model model, HttpServletResponse response) throws IOException {
+        model.addAttribute("isCaptcha", true);
+        response.sendRedirect("http://www.qingguox.xyz:8999/");
     }
 
     /**
@@ -277,6 +290,8 @@ public class ManagerController {
             String email = row.getCell(6).getStringCellValue();
 
             long now = System.currentTimeMillis();
+            XlgUserExtParams xlgUserExtParams = new XlgUserExtParams();
+            xlgUserExtParams.setPasswordFromMd5(DigestUtils.md5DigestAsHex("666666".getBytes()));
             XlgUser user = new XlgUser();
             user.setUserId(userId);
             user.setName(name);
@@ -287,6 +302,7 @@ public class ManagerController {
             user.setEmail(email);
             user.setCreateTime(now);
             user.setUpdateTime(now);
+            user.setExtParams(JSON.toJSONString(xlgUserExtParams));
             userList.add(user);
         }
         return userList;
@@ -313,5 +329,7 @@ public class ManagerController {
         Sheet sheet = workbook.getSheetAt(0);
         return sheet;
     }
+
+
 
 }

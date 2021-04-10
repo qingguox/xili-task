@@ -1,5 +1,6 @@
 package com.xlg.component.dao;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -53,7 +54,8 @@ public class XlgTaskUserProgressDAO {
         if (CollectionUtils.isEmpty(unfinishedIds)) {
             return 0;
         }
-        String sql = "update " + table + " set status =:status, update_time =:updateTime where task_id =:taskId and id =:id";
+        String sql =
+                "update " + table + " set status =:status, update_time =:updateTime where task_id =:taskId and id =:id";
         MapSqlParameterSource[] source = unfinishedIds.stream().map(id -> new MapSqlParameterSource()
                 .addValue("taskId", taskId)
                 .addValue("status", status)
@@ -69,5 +71,18 @@ public class XlgTaskUserProgressDAO {
                 namedParameterJdbcTemplate.queryForObject(sql, new MapSqlParameterSource("taskId", taskId)
                         .addValue("status", status), Long.class);
         return count;
+    }
+
+    public List<XlgTaskUserProgress> getByUserId(long userId) {
+        String sql = "select * from " + table + " where user_id=:userId";
+        return namedParameterJdbcTemplate.query(sql, new MapSqlParameterSource("userId", userId),
+                new BeanPropertyRowMapper<>(XlgTaskUserProgress.class));
+    }
+
+    public List<XlgTaskUserProgress> getByTaskIdAndUserId(Collection taskIds, long userId) {
+        String sql = "select * from " + table + " where task_id in (:taskIds) and user_id=:userId";
+        return namedParameterJdbcTemplate.query(sql, new MapSqlParameterSource("userId", userId)
+                .addValue("taskIds", taskIds),
+                new BeanPropertyRowMapper<>(XlgTaskUserProgress.class));
     }
 }

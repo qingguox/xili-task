@@ -4,6 +4,7 @@ import static com.xlg.component.enums.RoleEnum.MANAGER;
 import static com.xlg.component.enums.RoleEnum.STUDENT;
 import static com.xlg.component.enums.RoleEnum.TEACHER;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.tomcat.util.http.MimeHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,11 +33,14 @@ public class AdminHandlerInterceptor implements HandlerInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(AdminHandlerInterceptor.class);
     private static Map<Integer, List<String>> roleUrlMap = Maps.newHashMap();
-    private static List<String> otherUrls = Lists.newArrayList("AdminLTE", "bootstrap", "libs");
+    private static List<String> otherUrls =
+            Lists.newArrayList("AdminLTE", "bootstrap", "libs", "layer", "common.js", "iview", "Ionicons", "files.css",
+                    "font-awesome", "common");
+
     static {
-        roleUrlMap.put(TEACHER.value, Lists.newArrayList("teacher", "task"));
-        roleUrlMap.put(STUDENT.value, Lists.newArrayList("student", "task"));
-        roleUrlMap.put(MANAGER.value, Lists.newArrayList("manager", "task", "teacher", "student"));
+        roleUrlMap.put(TEACHER.value, Lists.newArrayList("teacher", "task", "file"));
+        roleUrlMap.put(STUDENT.value, Lists.newArrayList("student", "task", "file"));
+        roleUrlMap.put(MANAGER.value, Lists.newArrayList("manager", "task", "teacher", "student", "file"));
     }
 
     @Value("${constant.cookies.prefix.user}")
@@ -83,13 +88,33 @@ public class AdminHandlerInterceptor implements HandlerInterceptor {
             log.info("username={}, role={}, path={}, is not admin", user1, role, path);
             request.getSession().setAttribute("code", 401);
             request.getSession().setAttribute("msg", "没有权限!");
+            reflectSetparam(request, "Request Method", "get");
             request.getRequestDispatcher("/error").forward(request, response);
-//            response.sendRedirect("/error");
             return false;
         }
         log.info("preHandle:请求前调用");
         //返回 false 则请求中断
         return true;
+    }
+
+    private void reflectSetparam(HttpServletRequest request, String key, String value) {
+        Class<? extends HttpServletRequest> requestClass = request.getClass();
+        System.out.println("request实现类=" + requestClass.getName());
+        try {
+            Field request1 = requestClass.getDeclaredField("request");
+            request1.setAccessible(true);
+            Object o = request1.get(request);
+            Field coyoteRequest = o.getClass().getDeclaredField("coyoteRequest");
+            coyoteRequest.setAccessible(true);
+            Object o1 = coyoteRequest.get(o);
+            System.out.println("coyoteRequest实现类=" + o1.getClass().getName());
+            Field headers = o1.getClass().getDeclaredField("headers");
+            headers.setAccessible(true);
+            MimeHeaders o2 = (MimeHeaders) headers.get(o1);
+            o2.addValue(key).setString(value);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

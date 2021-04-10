@@ -1,14 +1,17 @@
 package com.xlg.component.service.impl;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Lists;
 import com.xlg.component.dao.XlgTaskUserProgressDAO;
 import com.xlg.component.enums.UserProgressStatusEnum;
 import com.xlg.component.model.XlgTaskUserProgress;
@@ -37,6 +40,9 @@ public class XlgTaskUserProgressServiceImpl implements XlgTaskUserProgressServic
                 .map(XlgTaskUserProgress::getId)
                 .distinct()
                 .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(unfinishedIds)) {
+            return 0;
+        }
        return xlgTaskUserProgressDAO.updateStatus(unfinishedIds, taskId, UserProgressStatusEnum.UNFINISHED.getValue());
     }
 
@@ -51,6 +57,15 @@ public class XlgTaskUserProgressServiceImpl implements XlgTaskUserProgressServic
         List<Long> userIdList = userProgressList.stream().filter(cur -> status.contains(cur.getStatus()))
                 .map(XlgTaskUserProgress::getUserId).distinct().collect(Collectors.toList());
         return ListUtils.emptyIfNull(userIdList);
+    }
+
+    @Override
+    public List<XlgTaskUserProgress> getProgressListByUserId(Collection taskIds, long userId) {
+        if (CollectionUtils.isEmpty(taskIds)) {
+            return Lists.newArrayList();
+        }
+        List<XlgTaskUserProgress> progressList = xlgTaskUserProgressDAO.getByTaskIdAndUserId(taskIds, userId);
+        return ListUtils.emptyIfNull(progressList);
     }
 
 }

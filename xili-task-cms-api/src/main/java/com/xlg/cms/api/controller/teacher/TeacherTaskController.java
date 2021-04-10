@@ -7,6 +7,7 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -19,12 +20,15 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -34,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.xlg.cms.api.dto.TaskSaveDTO.ConditionInfo;
+import com.xlg.cms.api.dto.XlgUserDTO;
 import com.xlg.cms.api.model.Result;
 import com.xlg.cms.api.model.TaskShow;
 import com.xlg.cms.api.model.TeacherTask;
@@ -44,9 +49,11 @@ import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
 import com.xlg.component.dao.XlgTaskUserDAO;
 import com.xlg.component.enums.IndicatorEnum;
+import com.xlg.component.enums.RoleEnum;
 import com.xlg.component.enums.TaskStatusEnum;
 import com.xlg.component.model.XlgTask;
 import com.xlg.component.model.XlgTaskCondition;
+import com.xlg.component.model.XlgUser;
 import com.xlg.component.service.XlgTaskConditionService;
 import com.xlg.component.service.XlgTaskService;
 import com.xlg.component.service.XlgTaskUserProgressService;
@@ -264,6 +271,7 @@ public class TeacherTaskController {
         creator.set("");
         if (isNotEmpty(dataList)) {
             dataList.forEach(data -> {
+                creator.set(data.getCreator());
                 List<Object> values = Lists.newArrayList();
                 values.add(data.getTaskId());
                 values.add(data.getTaskName());
@@ -275,8 +283,7 @@ public class TeacherTaskController {
                 values.add(data.getTaskUsers());
                 values.add(data.getTaskFinished());
                 values.add(data.getTaskUnFinished());
-                values.add(data.getCreator());
-                creator.set(data.getCreator());
+                values.add(creator);
                 ExcelUtils.writeRow(sheet, values);
             });
         }
@@ -339,6 +346,60 @@ public class TeacherTaskController {
             TemplateStoreFileUtil.download(response, baos.toByteArray(), "任务-" + taskId + "-学生完成情况", ".xls");
         } catch (IOException e) {
             logger.error("生成xls/xlsx文件失败", e);
+        }
+    }
+
+    @PostMapping("/user/info")
+    @ResponseBody
+    public Result userInfo(HttpServletRequest request) {
+        Page page = new Page(1, 1);
+        // TODO 改成一个adminId 一样
+        Object user = request.getSession().getAttribute("user");
+        long curUserId = 0;
+        if (user != null) {
+            curUserId = Long.parseLong((String) user);
+        }
+
+        XlgUser req = new XlgUser();
+        req.setUserId(curUserId);
+        System.out.println(curUserId);
+        List<XlgUser> allTaskByPage = xlgUserService.getAllTaskByPage(page, req);
+        System.out.println(Arrays.toString(allTaskByPage.toArray()));
+        XlgUserDTO dto = new XlgUserDTO();
+        if (CollectionUtils.isNotEmpty(allTaskByPage)) {
+            XlgUser cur = allTaskByPage.get(0);
+            dto.setAge(cur.getAge());
+            dto.setEmail(cur.getEmail());
+            dto.setId(cur.getId());
+            dto.setName(cur.getName());
+            dto.setPhone(cur.getPhone());
+            dto.setSex(cur.getSex());
+            dto.setUserId(cur.getUserId());
+            dto.setType(RoleEnum.fromValue(cur.getType()).getDesc());
+        }
+        return Result.ok(dto);
+    }
+
+
+    @PostMapping("/user/edit")
+    @ResponseBody
+    public Result edit(@RequestBody XlgUserDTO xlgUserDTO) {
+        XlgUser user = new XlgUser();
+        user.setAge(xlgUserDTO.getAge());
+        user.setEmail(xlgUserDTO.getEmail());
+        user.setId(xlgUserDTO.getId());
+        user.setName(xlgUserDTO.getName());
+        user.setPhone(xlgUserDTO.getPhone());
+        user.setSex(xlgUserDTO.getSex());
+        user.setUserId(xlgUserDTO.getUserId());
+        user.setUpdateTime(System.currentTimeMillis());
+        user.setType(RoleEnum.valueOfDesc(xlgUserDTO.getType()).value);
+        System.out.println(user.toString());
+        int count = xlgUserService.update(user);
+        if (count > 0) {
+            return Result.ok("修改成功");
+        } else {
+            return Result.error("修改失败");
         }
     }
 }

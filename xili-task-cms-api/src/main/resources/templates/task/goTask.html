@@ -56,13 +56,13 @@
             <div v-for="(item, index) in form.dynamicItem" :key="index" id="display1" v-show="show">
                 <div style="height: 120px; width: 500px;box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)">
                     <i-select v-model="item.status" style="width: 300px" >
-                        <i-option v-for="option in options" v-if="item.status == option.value" v-bind:value="option.value" >
+                        <i-option v-for="option in options" v-if="item.status == option.value" v-bind:value="item.status" >
                             {{ option.desc }}
                         </i-option>
                     </i-select>
                     <el-link v-if="item.status == 1" type="success" href="formQuartz.indFile.url" > {{ formQuartz.indFile.name }}
                     </el-link>
-                    <div v-if="item.status === 0">
+                    <div v-if="item.status == 1">
                         <el-upload
                                 v-model="formQuartz.file"
                                 :value.sync="formQuartz.file"
@@ -105,7 +105,7 @@
             show : true,
             show2 : false,
             fileList: [],
-            indFileList : [{name: 'food2.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'}],
+            indFileList : [],
             formQuartz: {
                 taskId: '',
                 taskName : "",

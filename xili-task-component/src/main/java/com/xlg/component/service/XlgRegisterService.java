@@ -11,5 +11,5 @@ public interface XlgRegisterService {
 
     int batchInsert(List<XlgRegister> list);
 
-    void updateStatus(long taskId, long time, int value);
+    int updateStatus(long taskId, long time, int value);
 }

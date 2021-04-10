@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -44,9 +45,11 @@ import com.xlg.cms.api.utils.ExcelUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
 import com.xlg.component.common.TaskConstants;
+import com.xlg.component.dto.MessageDTO;
 import com.xlg.component.enums.AllStatusEnum;
 import com.xlg.component.enums.IndicatorEnum;
 import com.xlg.component.enums.TaskStatusEnum;
+import com.xlg.component.enums.TaskType;
 import com.xlg.component.enums.UserProgressStatusEnum;
 import com.xlg.component.model.XlgIndicator;
 import com.xlg.component.model.XlgRegister;
@@ -61,6 +64,7 @@ import com.xlg.component.service.XlgTaskService;
 import com.xlg.component.service.XlgTaskUserProgressService;
 import com.xlg.component.service.XlgTaskUserService;
 import com.xlg.component.service.XlgUserService;
+import com.xlg.component.utils.ProducerUtils;
 
 
 /**
@@ -89,6 +93,11 @@ public class TaskController {
     private XlgTaskUserProgressService xlgTaskUserProgressService;
     @Resource
     private XlgUserService xlgUserService;
+    @Resource
+    private RocketMQTemplate rocketMQTemplate;
+    @Resource
+    private ProducerUtils producerUtils;
+
 
     /**
      * 任务列表
@@ -335,18 +344,29 @@ public class TaskController {
         initUserProgress(userSet, userProgressStatus, taskId);
         // 4. 插入条件表
         initTaskCondition(taskSaveDTO, taskId);
+
+        // TODO 需要加缓存
         // 5. 注册register 实际上是任务注册，状态1 监控中，此时指标模块看两点，1.监控中,2.监控时间
         initRegister(taskSaveDTO, taskId);
 
         // 6. 准备发送mq到，指定topic，处理任务，进度开始，结束status变化，和register结束status
         // 待进行
+        MessageDTO dto = new MessageDTO();
+        dto.setTaskId(taskId);
         if (taskStatus == TaskStatusEnum.PENDING.getValue()) {
+            dto.setTargetMills(taskSaveDTO.getStartTime());
+            dto.setTaskType(TaskType.TASK_START);
+            producerUtils.sendMessage(dto);
             logger.info("任务id={},开始时间还没到，所以是待进行中，发送任务状态变为开始的消息");
         }
         logger.info("任务id={},发送任务结束的处理消息，延迟消息哦，主要是任务，进度状态变更，还有注册表变无效哦");
-
-        return Result.ok();
+        dto.setTargetMills(taskSaveDTO.getEndTime());
+        dto.setTaskType(TaskType.TASK_END);
+        producerUtils.sendMessage(dto);
+        return Result.ok("任务添加成功!!");
     }
+
+
 
     private void initRegister(TaskSaveDTO taskSaveDTO, long taskId) {
         long now = System.currentTimeMillis();
@@ -375,6 +395,7 @@ public class TaskController {
             condition.setUpdateTime(now);
             condition.setStatus(AllStatusEnum.TACH.getValue());
             condition.setIndicator(indicator);
+            condition.setThreshold(1);
             condition.setDescription("");
             condition.setIndicatorName(IndicatorEnum.fromValue(indicator).getDesc());
             if (indicator == IndicatorEnum.UPLOAD_WORK.getValue()) {

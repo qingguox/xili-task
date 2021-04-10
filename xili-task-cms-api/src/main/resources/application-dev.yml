@@ -38,6 +38,13 @@ web:
     upload-path: /Users/easy/others/gitPro/xili-task/xili-task-cms-api/src/main/resources/static/upload/
 
 
+rocketmq:
+    name-server: 118.31.103.97:9876 # 自己的RocketMQ服务地址
+    producer:
+        send-message-timeout: 300000
+        group: launch-group
+
+
 #    freemarker:
 #        cache: false # 缓存配置 开发阶段应该配置为false 因为经常会改
 #        suffix: .html # 模版后缀名 默认为ftl

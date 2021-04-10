@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +25,8 @@ import com.xlg.cms.api.model.Result;
 import com.xlg.cms.api.utils.CaptchaUtil;
 import com.xlg.cms.api.utils.CookieUtils;
 import com.xlg.component.common.UserToken;
+import com.xlg.component.enums.AllStatusEnum;
+import com.xlg.component.service.XlgUserService;
 
 /**
  * @author wangqingwei <wangqingwei@kuaishou.com>
@@ -39,6 +42,9 @@ public class LoginController {
 
     @Value("${constant.cookies.prefix.role}")
     private String COOKIE_PREFIX_ROLE;
+    @Autowired
+    private XlgUserService xlgUserService;
+
 
     /**
      * 跳转到登录页面
@@ -81,20 +87,25 @@ public class LoginController {
         UserToken token = new UserToken();
         token.setUserName(username);
         // TODO md5 加密
-
-        token.setPassword(password);
+        String passwordFromMd5 = password;
+        // String passwordFromMd5 = DigestUtils.md5DigestAsHex(password.getBytes());
+        AllStatusEnum hasUser = xlgUserService.hasUser(Long.parseLong(username), passwordFromMd5);
+        if (hasUser == AllStatusEnum.UNKNOWN || hasUser == AllStatusEnum.TACH) {
+            return Result.error(hasUser.thirdDesc);
+        }
+        token.setPassword(passwordFromMd5);
         // 判断是否自动登录
         if (rememberMe != null) {
             token.setRememberMe(true);
             String key = JSON.toJSONString(token);
-            Cookie cookie = new Cookie(COOKIE_PREFIX_USER, username + "." + password);
-            cookie.setMaxAge(60 * 60);
+            Cookie cookie = new Cookie(COOKIE_PREFIX_USER, username + "." + passwordFromMd5);
+            cookie.setMaxAge(60 * 60 * 6);
             cookie.setPath("/");
             cookie.setHttpOnly(true);
             response.addCookie(cookie);
 
             Cookie cookie2 = new Cookie(COOKIE_PREFIX_ROLE, role);
-            cookie.setMaxAge(60 * 60);
+            cookie.setMaxAge(60 * 60 * 6);
             cookie.setPath("/");
             cookie.setHttpOnly(true);
             response.addCookie(cookie2);
@@ -154,16 +165,19 @@ public class LoginController {
      * 处理错误页面
      */
     @GetMapping("/error")
-    public String error(Model model, HttpServletRequest request) {
+    public String error2(HttpServletRequest request) {
         Integer code = (Integer) request.getSession().getAttribute("code");
+        String msg = (String) request.getSession().getAttribute("msg");
         String errorMsg = "好像出错了呢！";
-        if (code == null || code == 404) {
+        if (code == null || code == 404 || code == 401) {
             errorMsg = "页面找不到了！好像是去月球了~";
+            if (StringUtils.isNotBlank(msg)) {
+                errorMsg = msg;
+            }
             request.getSession().setAttribute("msg", errorMsg);
         }
         System.out.println(code + errorMsg);
-        String url = "error";
-        return url;
+        return "error";
     }
 
 

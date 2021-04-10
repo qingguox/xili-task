@@ -58,6 +58,9 @@
                     <i-button type="primary" icon="ios-icon-delete" :disabled="true">删除</i-button>
                 </div><br/><br/><br/>
             </div>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <i-button type="primary"  @click="edit()" icon="edit">确定修改</i-button>
         </i-form>
     </template>
 </div>
@@ -148,15 +151,59 @@
                     })
                 }
             },
-            // 任务状态枚举
-            indicators: function () {
+            // 查看当前用户数据
+            userInfo: function () {
                 $.ajax({
-                    url: "../task/indicators",
+                    url: "../student/task/user/info",
                     type: "post",
                     data: {
                     },
                     success: function (result) {
-                        vm.options = result.msg;
+                        vm.formQuartz = result.msg;
+                    },
+                    error: function () {
+                        let code = 401
+                        let msg = "很抱歉，您没有权限！！！"
+                        if (code == 401) {
+                            vm.$Notice.error({
+                                desc:  msg
+                            });
+                            window.location.href = "task/index.html"
+                        }
+                    }
+                });
+            },
+            edit: function () {
+                var quartz =  vm.formQuartz;
+                if(vm.formQuartz.name==""||vm.formQuartz.age==""||vm.formQuartz.sex==""||vm.formQuartz.type==""||vm.formQuartz.phone==""||vm.formQuartz.email==""){
+                    alert("请输入以上完整信息");
+                    return;
+                }
+                var json = {
+                    "id": quartz.id,
+                    "name": quartz.name,
+                    "age": quartz.age,
+                    "userId": quartz.userId,
+                    "sex": quartz.sex,
+                    "type": quartz.type,
+                    "phone": quartz.phone,
+                    "email": quartz.email
+                };
+                $.ajax({
+                    url:"../student/task/user/edit",
+                    type:"post",
+                    dataType:'json',
+                    contentType:'application/json;charset=UTF-8',
+                    data: JSON.stringify(json),
+                    success: function(result) {
+                        if(result.code=="200"){
+                            window.parent.location.reload();
+                            //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
+                        }else{
+                            vm.$Notice.error({
+                                desc:  '系统异常'
+                            });
+                        }
                     }
                 });
             },
@@ -211,7 +258,7 @@
             },
         },
         created : function() {
-            this.indicators();
+            this.userInfo();
         }
     })
 </script>
