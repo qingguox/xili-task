@@ -46,7 +46,8 @@ public class XlgTaskStartProcessor implements XlgTaskStatusChangedProcessor {
         }
         XlgTask xlgTask = taskByIds.get(0);
         if (xlgTask.getId() != taskId || xlgTask.getStatus() != TaskStatusEnum.PENDING.getValue()) {
-            logger.error("[XlgTaskStartProcessor] taskId={} is null, dto={}", taskId, JSON.toJSONString(dto));
+            logger.error("[XlgTaskStartProcessor] taskId={} is null, / status is not need ! task={}, dto={}", taskId,
+                    JSON.toJSONString(xlgTask), JSON.toJSONString(dto));
             return;
         }
         int count = xlgTaskService.updateStatus(taskId, now, TaskStatusEnum.ONLINE.getValue());

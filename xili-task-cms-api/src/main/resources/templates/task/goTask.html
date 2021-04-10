@@ -49,7 +49,7 @@
             </Form-item>
 
             <Form-item label="任务参与用户" prop="fileUrl" :disabled="true">
-                <el-link type="success" href="formQuartz.file.url" > {{ formQuartz.file.name }}
+                <el-link type="success" @click="download(formQuartz.file)"> {{ formQuartz.file.name }}
                 </el-link>
             </Form-item>
             <el-button @click="addItem" type="primary" :disabled="true">添加任务条件</el-button><br/><br/><br/>
@@ -60,14 +60,14 @@
                             {{ option.desc }}
                         </i-option>
                     </i-select>
-                    <el-link v-if="item.status == 1" type="success" href="formQuartz.indFile.url" > {{ formQuartz.indFile.name }}
+                    <el-link v-if="item.status == 2" type="success"  @click="download(formQuartz.indFile)" > {{ formQuartz.indFile.name }}
                     </el-link>
                     <div v-if="item.status == 1">
                         <el-upload
-                                v-model="formQuartz.file"
-                                :value.sync="formQuartz.file"
+                                v-model="formQuartz.indFile"
+                                :value.sync="formQuartz.indFile"
                                 class="upload-demo"
-                                action="https://jsonplaceholder.typicode.com/posts/"
+                                action="../file/upload/file"
                                 :on-preview="handlePreview"
                                 :on-remove="handleRemove"
                                 :before-remove="beforeRemove"
@@ -81,7 +81,7 @@
                             <span>Selected: {{ formQuartz.indFileUrl }}</span>
                         </el-upload>
                     </div>
-                    <i-button type="primary" icon="ios-icon-delete" @click="submitItem(item, index)">提交</i-button>
+                    <i-button type="primary" icon="ios-icon-delete" @click="submitItem(formQuartz.taskId, item, index)">提交</i-button>
                 </div><br/><br/><br/>
             </div>
         </i-form>
@@ -89,6 +89,7 @@
 </div>
 <script th:src="@{/libs/jquery-3.2.1.min.js}"></script>
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script type="text/javascript">
     var vm = new Vue({
         el : '#app2',
@@ -152,16 +153,45 @@
                     status: '',
                 })
             },
-            submitItem : function (item, index) {
-                $.ajax({
-                    url: "../student/task/add",
-                    type: "post",
-                    data: {
+            submitItem : function (taskId, item, index) {
+                var json = {};
+                var json1 = {};
+                var json2 = {};
+                var indFileList = vm.indFileList[0];
+                alert(indFileList)
+                if(JSON.stringify(vm.indFileList)=='[]') {
+                    json1 = {
                         'status' : item.status,
-                        'file' : vm.formQuartz.file
-                    },
-                    success: function (result) {
-
+                        'taskId': taskId,
+                    };
+                    json = json1;
+                } else {
+                    json2 = {
+                        'status' : item.status,
+                        'taskId': taskId,
+                        "indFile": {
+                            "name": indFileList.name,
+                            "url": indFileList.url
+                        },
+                    };
+                    json = json2;
+                }
+                $.ajax({
+                    url:"../student/task/todo",
+                    type:"post",
+                    dataType:'json',
+                    contentType:'application/json;charset=UTF-8',
+                    data: JSON.stringify(json),
+                    success: function(result) {
+                        console.log(result.code)
+                        if(result.code == "200"){
+                            window.parent.location.reload();
+                            //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
+                        }else{
+                            vm.$Notice.error({
+                                desc:  '系统异常'
+                            });
+                        }
                     }
                 });
             },
@@ -176,6 +206,44 @@
                         vm.options = result.msg;
                     }
                 });
+            },
+            download(file) {
+                var url = file.url;
+                var filename = file.name
+                if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                    window.navigator.msSaveOrOpenBlob(csvData, file.name);
+                } else {
+                    // var link = document.createElement('a')
+                    // link.download = file.name
+                    // var binaryData = [];
+                    // binaryData.push(file.file);
+                    // link.href = window.URL.createObjectURL(new Blob(binaryData, {type: "application/zip"}))
+                    // document.body.appendChild(link);
+                    // link.click()
+                    // window.URL.revokeObjectURL(link.href)
+                    // console.log(link.href)
+                    return axios.get(url, {
+                        params: {},
+                        responseType:'arraybuffer',
+                    }).then((r) => {
+                        const content = r.data
+                        const blob = new Blob([content],{type: file.type})
+                        if ('download' in document.createElement('a')) {
+                            const elink = document.createElement('a')
+                            elink.download = filename
+                            elink.style.display = 'none'
+                            elink.href = URL.createObjectURL(blob)
+                            document.body.appendChild(elink)
+                            elink.click()
+                            URL.revokeObjectURL(elink.href)
+                            document.body.removeChild(elink)
+                            alert('导出成功')
+                        }
+                    }).catch((r) => {
+                        console.error(r)
+                        alert('导出失败')
+                    })
+                }
             },
             //新建任务(略简单)
             acceptClick : function(){
@@ -198,6 +266,7 @@
                     },
                     success: function(result) {
                         if(result.code=="200"){
+                            this.$message.success(result.msg);//文件上传错误提示
                             window.parent.location.reload();
                             //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
                         }else{
@@ -208,11 +277,71 @@
                     }
                 });
             },
+            beforeUpload(file){
+                const isLt100M = file.size / 1024 / 1024 / 1024 < 11;
+                if (['text/plain'].indexOf(file.type) == -1) {
+                    this.$message.error('上传文件只支持文本文件!');
+                    return false;
+                }
+                if (!isLt100M) {
+                    this.$message.error('文件大小不能超过100MB哦!');
+                    return false;
+                }
+                // this.$refs.upload.clearFiles();
+            },
+            beforeIndUpload(file){
+                const isLt100M = file.size / 1024 / 1024 / 1024 < 11;
+                if (['application/zip', 'application/x-rar'].indexOf(file.type) == -1) {
+                    this.$message.error('仅支持.txt格式的压缩包哦！');
+                    return false;
+                }
+                if (!isLt100M) {
+                    this.$message.error('压缩包大小不能超过100MB哦!');
+                    return false;
+                }
+                // this.$refs.upload.clearFiles();
+            },
             handleRemove(file, fileList) {
+                this.fileList = fileList.slice(-1)
                 console.log(file, fileList);
             },
             handlePreview(file) {
-                console.log(file);
+                var url = file.url;
+                var filename = file.name
+                if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                    window.navigator.msSaveOrOpenBlob(csvData, file.name);
+                } else {
+                    // var link = document.createElement('a')
+                    // link.download = file.name
+                    // var binaryData = [];
+                    // binaryData.push(file.file);
+                    // link.href = window.URL.createObjectURL(new Blob(binaryData, {type: "application/zip"}))
+                    // document.body.appendChild(link);
+                    // link.click()
+                    // window.URL.revokeObjectURL(link.href)
+                    // console.log(link.href)
+                    return axios.get(url, {
+                        params: {},
+                        responseType:'arraybuffer',
+                    }).then((r) => {
+                        const content = r.data
+                        const blob = new Blob([content],{type: file.type})
+                        if ('download' in document.createElement('a')) {
+                            const elink = document.createElement('a')
+                            elink.download = filename
+                            elink.style.display = 'none'
+                            elink.href = URL.createObjectURL(blob)
+                            document.body.appendChild(elink)
+                            elink.click()
+                            URL.revokeObjectURL(elink.href)
+                            document.body.removeChild(elink)
+                            alert('导出成功')
+                        }
+                    }).catch((r) => {
+                        console.error(r)
+                        alert('导出失败')
+                    })
+                }
             },
             handleExceed(files, fileList) {
                 this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
@@ -220,21 +349,18 @@
             beforeRemove(file, fileList) {
                 return this.$confirm(`确定移除 ${ file.name }？`);
             },
-            uploadFileSuccess(response, file, fileList){
-                if(response.data.error==0){
-                    file.response=response.data.data;
-                    alert(file);
-                    this.fileList.push(file);
+            uploadFileSuccess(result){
+                if(result.code == "200"){
+                    vm.fileList.push(result.msg[0]);
                 }else{
-                    this.$message.error(response.data.message);//文件上传错误提示
+                    this.$message.error("文件长传错误");//文件上传错误提示
                 }
             },
-            uploadIndFileSuccess(response, file, fileList){
-                if(response.data.error==0){
-                    file.response=response.data.data;
-                    this.indFileList.push(file);
+            uploadIndFileSuccess(result){
+                if(result.code == "200"){
+                    vm.indFileList.push(result.msg[0]);
                 }else{
-                    this.$message.error(response.data.message);//文件上传错误提示
+                    this.$message.error("文件长传错误");//文件上传错误提示
                 }
             },
         },

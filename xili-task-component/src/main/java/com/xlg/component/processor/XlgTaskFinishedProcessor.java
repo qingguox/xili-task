@@ -50,33 +50,34 @@ public class XlgTaskFinishedProcessor implements XlgTaskStatusChangedProcessor {
         //1. 任务状态变更
         List<XlgTask> taskByIds = xlgTaskService.getTaskByIds(Lists.newArrayList(taskId));
         if (CollectionUtils.isEmpty(taskByIds)) {
-            logger.error("[XlgTaskStartProcessor] taskByIds is null, dto={}", JSON.toJSONString(dto));
+            logger.error("[XlgTaskFinishedProcessor] taskByIds is null, dto={}", JSON.toJSONString(dto));
             return;
         }
         XlgTask xlgTask = taskByIds.get(0);
-        if (xlgTask.getId() != taskId || xlgTask.getStatus() != TaskStatusEnum.PENDING.getValue()) {
-            logger.error("[XlgTaskStartProcessor] taskId={} is null, dto={}", taskId, JSON.toJSONString(dto));
+        if (xlgTask.getId() != taskId || xlgTask.getStatus() != TaskStatusEnum.ONLINE.getValue()) {
+            logger.error("[XlgTaskFinishedProcessor] taskId={} is null, / status is not need ! task={}, dto={}", taskId,
+                    JSON.toJSONString(xlgTask), JSON.toJSONString(dto));
             return;
         }
-        int count = xlgTaskService.updateStatus(taskId, now, TaskStatusEnum.ONLINE.getValue());
+        int count = xlgTaskService.updateStatus(taskId, now, TaskStatusEnum.OFFLINE.getValue());
         if (count <= 0) {
-            logger.info("[XlgTaskStartProcessor] 修改失败, taskId={}, dto={}", taskId, JSON.toJSONString(dto));
+            logger.info("[XlgTaskFinishedProcessor] 修改失败, taskId={}, dto={}", taskId, JSON.toJSONString(dto));
             return;
         }
-        logger.info("[XlgTaskStartProcessor] 修改成功, taskId={}", taskId);
+        logger.info("[XlgTaskFinishedProcessor] 修改成功, taskId={}", taskId);
 
         // 2. 进度变更， 进行中-> 未完成
         // 找出任务下进行中的用户，然后修改状态 未完成
         xlgTaskUserProgressService.updateStatus(taskId);
-        logger.info("[XlgTaskStartProcessor] 修改进度成功, taskId={}", taskId);
+        logger.info("[XlgTaskFinishedProcessor] 修改进度成功, taskId={}", taskId);
 
         // 3. 监控无效
         now = System.currentTimeMillis();
         count = xlgRegisterService.updateStatus(taskId, now, AllStatusEnum.DETACH.getValue());
         if (count <= 0) {
-            logger.info("[XlgTaskStartProcessor] 修改监控无效, taskId={}, dto={}", taskId, JSON.toJSONString(dto));
+            logger.info("[XlgTaskFinishedProcessor] 修改监控无效, taskId={}, dto={}", taskId, JSON.toJSONString(dto));
             return;
         }
-        logger.info("[XlgTaskStartProcessor] 修改监控成功, taskId={}", taskId);
+        logger.info("[XlgTaskFinishedProcessor] 修改监控成功, taskId={}", taskId);
     }
 }

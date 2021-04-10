@@ -41,6 +41,7 @@ import com.xlg.cms.api.dto.TaskSaveDTO.ConditionInfo;
 import com.xlg.cms.api.dto.XlgUserDTO;
 import com.xlg.cms.api.model.Result;
 import com.xlg.cms.api.model.StudentTask;
+import com.xlg.cms.api.model.TaskToFinished;
 import com.xlg.cms.api.model.UploadFile;
 import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
@@ -98,6 +99,7 @@ public class StudentTaskController {
         XlgTask model = new XlgTask();
         int finished = 0;
         List<StudentTask> list = progress(page, model, curUserId, finished);
+        logger.info("[StudentTaskController] taskList={}", JSON.toJSONString(list));
         return Result.ok(list);
     }
 
@@ -316,6 +318,13 @@ public class StudentTaskController {
         } else {
             return Result.error("修改失败");
         }
+    }
+
+    @PostMapping("/todo")
+    @ResponseBody
+    public Result toDo(@RequestBody TaskToFinished taskToFinished) {
+        logger.info("[StudentTaskController] receive taskToFinished={}", JSON.toJSONString(taskToFinished));
+        return Result.ok("提交成功!!");
     }
 
 }

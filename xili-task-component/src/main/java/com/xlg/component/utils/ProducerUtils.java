@@ -68,12 +68,18 @@ public class ProducerUtils {
     // consumer发送消息，轮训处理
     public void sendDelayMessage(MessageDTO dto) {
         long targetMills = dto.getTargetMills();
-        int index = calculateNum((targetMills - System.currentTimeMillis()) / ONE_THOUSAND);// 毫秒化为秒
+        long nowMills = System.currentTimeMillis();
+        logger.info("[ProducerUtils] sendDelayMessage start targetMills={}, nowMills={}",
+                JSON.toJSONString(targetMills), JSON.toJSONString(nowMills));
+        int second = (int) ((targetMills - nowMills) / ONE_THOUSAND);
+        logger.info("second={}", second);
+        int index = calculateNum(second);// 毫秒化为秒
+        logger.info("[ProducerUtils] sendDelayMessage index={}", index);
         // 比1s小 直接发送1s
         if (index == -1) {
             index = 0;
         }
-        int secondLevel = defaultLevel.get(index);
+        int secondLevel = index + 1;
         logger.info("[ProducerUtils] sendDelayMessage end dto={}, secondLevel={}", JSON.toJSONString(dto), secondLevel);
         sendMessageWithDelayLevel(dto, secondLevel);
     }
@@ -91,6 +97,7 @@ public class ProducerUtils {
         for (int i = defaultLevel.size() - 1; i >= 0; i--) {
             int cul = (int) second / defaultLevel.get(i);
             if (cul != 0) {
+                logger.info("calculateNum, second={}, kko={}, i={}, curl={}", second, defaultLevel.get(i), i, cul);
                 return i;
             }
         }
