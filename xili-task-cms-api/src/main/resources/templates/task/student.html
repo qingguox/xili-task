@@ -69,6 +69,18 @@
             <!-- 待实现分页功能 -->
             <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
         </template>
+        <div style="float: right;">
+            <el-pagination
+
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="pageNo"
+                    :page-sizes="[5, 10, 15]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="total">
+            </el-pagination>
+        </div>
     </div>
 </div>
 
@@ -87,8 +99,9 @@
             endTime: "",
             taskDesc: "",
             userFinished: '',
-            pageNo: 0,
+            pageNo: 1,
             pageSize: 10,
+            total: 0,
             time : [],
             JobData: [],
             form : {
@@ -111,25 +124,27 @@
                 key: "taskName",
                 title: "任务名",
                 align: 'center',
+                width: 100
             }, {
                 key: "startTime",
                 title: "开始时间",
                 align: 'center',
-                width: 200
+                width: 130
             }, {
                 key: "endTime",
                 title: "结束时间",
                 align: 'center',
-                width: 200
+                width: 130
             }, {
                 key: "status",
                 title: "任务状态",
                 align: 'center',
+                width: 100
             }, {
                 key: "createTime",
                 title: "创建时间",
                 align: 'center',
-                width: 200
+                width: 130
             }, {
                 key: "taskDesc",
                 title: "任务备注",
@@ -138,15 +153,16 @@
                 key: "creator",
                 title: "创建人",
                 align: 'center',
-                width: 200,
+                width: 100,
             }, {
                 key: "userFinishSow",
                 title: "学生完成",
                 align: 'center',
+                width: 100
             }, {
                 title: '操作',
                 key: 'action',
-                width: 280,
+                width: 200,
                 align: 'center',
                 render: function (h, params) {
                     var functionList = [];
@@ -254,6 +270,7 @@
                                 vm.JobData[i].userFinishSow = "未完成"
                             }
                         }
+                        vm.total = result.code;
                     }
                 });
             },
@@ -358,6 +375,7 @@
                                 }
                             }
                         }
+                        vm.total = result.code;
                     },
                     error: function () {
                         let code = 401
@@ -377,8 +395,8 @@
                     title: '查看',
                     url: 'task/touch.html',
                     scroll: true,
-                    width: '1000px',
-                    height: '1000px',
+                    width: '800px',
+                    height: '800px',
                     success: function (iframeId) {
                         top.frames[iframeId].vm.formQuartz.taskDesc = task.taskDesc;
                         top.frames[iframeId].vm.formQuartz.taskId = task.taskId;
@@ -400,8 +418,8 @@
                     title: '去完成',
                     url: 'task/goTask.html',
                     scroll: true,
-                    width: '1000px',
-                    height: '1000px',
+                    width: '800px',
+                    height: '800px',
                     success: function (iframeId) {
                         top.frames[iframeId].vm.formQuartz.taskDesc = task.taskDesc;
                         top.frames[iframeId].vm.formQuartz.taskId = task.taskId;
@@ -416,6 +434,15 @@
                     },
                 });
             },
+            handleSizeChange(val) {
+                this.pageSize = val;
+                this.pageNo = 1;
+                this.search();
+            },
+            handleCurrentChange(val) {
+                this.pageNo = val;
+                this.search();
+            }
         },
         created: function () {
             this.list();

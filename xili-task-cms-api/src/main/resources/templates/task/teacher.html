@@ -65,6 +65,18 @@
             <!-- 待实现分页功能 -->
             <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
         </template>
+        <div style="float: right;">
+            <el-pagination
+
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="pageNo"
+                    :page-sizes="[5, 10, 15]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="total">
+            </el-pagination>
+        </div>
     </div>
 </div>
 
@@ -82,8 +94,9 @@
             startTime: "",
             endTime: "",
             taskDesc: "",
-            pageNo: 0,
+            pageNo: 1,
             pageSize: 10,
+            total: 0,
             time : [],
             JobData: [],
             form : {
@@ -96,6 +109,7 @@
                 key: "taskId",
                 title: "任务ID",
                 align: 'center',
+                width: 100
             }, {
                 key: "taskName",
                 title: "任务名"
@@ -103,12 +117,12 @@
                 key: "startTime",
                 title: "开始时间",
                 align: 'center',
-                width: 190
+                width: 130
             }, {
                 key: "endTime",
                 title: "结束时间",
                 align: 'center',
-                width: 190
+                width: 130
             }, {
                 key: "status",
                 title: "任务状态"
@@ -121,20 +135,23 @@
                 title: "任务备注"
             }, {
                 key: "taskUsers",
-                title: "任务总人数"
+                title: "总人数",
+                width: 50
             }, {
                 key: "taskFinished",
                 title: "完成人数",
+                width: 50
             }, {
                 key: "taskUnFinished",
                 title: "未完成人数",
+                width: 50
             }, {
                 key: "creator",
                 title: "创建人"
             }, {
                 title: '操作',
                 key: 'action',
-                width: 350,
+                width: 280,
                 align: 'left',
                 render: function (h, params) {
                     var functionList = [];
@@ -239,6 +256,7 @@
                     },
                     success: function (result) {
                         vm.JobData = result.msg;
+                        vm.total = result.code;
                     }
                 });
             },
@@ -370,6 +388,7 @@
                     data: {'time': (new Date()).toString(), 'pageNo': this.pageNo, 'pageSize': this.pageSize},
                     success: function (result) {
                         vm.JobData = result.msg;
+                        vm.total = result.code;
                     },
                     error: function (result) {
                         let code = 401
@@ -444,6 +463,15 @@
                     },
                 });
             },
+            handleSizeChange(val) {
+                this.pageSize = val;
+                this.pageNo = 1;
+                this.search();
+            },
+            handleCurrentChange(val) {
+                this.pageNo = val;
+                this.search();
+            }
         },
         created: function () {
             this.list();

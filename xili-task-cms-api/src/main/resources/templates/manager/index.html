@@ -44,6 +44,17 @@
             <!-- 待实现分页功能 -->
             <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
         </template>
+        <div style="float: right;">
+            <el-pagination
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="pageNo"
+                    :page-sizes="[5, 10, 20]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="total">
+            </el-pagination>
+        </div>
     </div>
 </div>
 
@@ -65,6 +76,7 @@
             taskDesc: "",
             pageNo: 1,
             pageSize: 10,
+            total: 0,
             time: [],
             JobData: [],
             form: {
@@ -92,14 +104,16 @@
                 title: "工种"
             }, {
                 key: "phone",
-                title: "电话"
+                title: "电话",
+                width: 200
             }, {
                 key: "email",
-                title: "邮箱"
+                title: "邮箱",
+                width: 200
             }, {
                 title: '操作',
                 key: 'action',
-                width: 400,
+                width: 280,
                 align: 'left',
                 render: function (h, params) {
                     var functionList = [];
@@ -174,6 +188,7 @@
                     data: JSON.stringify(json),
                     success: function (result) {
                         vm.JobData = result.msg;
+                        vm.total = result.code;
                     }
                 });
             },
@@ -232,6 +247,7 @@
                     data: {'time': (new Date()).toString(), 'pageNo': this.pageNo, 'pageSize': this.pageSize},
                     success: function (result) {
                         vm.JobData = result.msg;
+                        vm.total = result.code;
                     }
                 });
             },
@@ -270,6 +286,15 @@
                 }, function () {
 
                 });
+            },
+            handleSizeChange(val) {
+                this.pageSize = val;
+                this.pageNo = 1;
+                this.search();
+            },
+            handleCurrentChange(val) {
+                this.pageNo = val;
+                this.search();
             }
         },
         created: function () {

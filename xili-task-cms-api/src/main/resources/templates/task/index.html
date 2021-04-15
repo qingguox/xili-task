@@ -65,6 +65,18 @@
             <!-- 待实现分页功能 -->
             <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
         </template>
+        <div style="float: right;">
+            <el-pagination
+
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="pageNo"
+                    :page-sizes="[5, 10, 15]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="total">
+            </el-pagination>
+        </div>
     </div>
     <div style="margin-bottom: 6px;margin: 30px" th:if="${session.role} == 2">
         <template>
@@ -73,6 +85,18 @@
             <!-- 待实现分页功能 -->
             <!-- <Page :current="teacher.pageNumber" :total="tableSize" :page-size="pageSize"  @on-change="changePage" @on-page-size-change="changePageSize" show-elevator show-sizer show-total></Page> -->
         </template>
+        <div style="float: right;">
+            <el-pagination
+
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="pageNo"
+                    :page-sizes="[5, 10, 15]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="total">
+            </el-pagination>
+        </div>
     </div>
 </div>
 
@@ -92,6 +116,7 @@
             taskDesc: "",
             pageNo: 1,
             pageSize: 10,
+            total: 0,
             time : [],
             JobData: [],
             form: {
@@ -201,7 +226,9 @@
             }],
             tableTitleStudent: [{
                 key: "taskId",
-                title: "任务ID"
+                title: "任务ID",
+                align: 'center',
+                width:  50
             }, {
                 key: "taskName",
                 title: "任务名"
@@ -304,6 +331,7 @@
                     },
                     success: function (result) {
                         vm.JobData = result.msg;
+                        vm.total = result.code;
                     }
                 });
             },
@@ -408,6 +436,7 @@
                     data: {'time': (new Date()).toString(), 'pageNo': this.pageNo, 'pageSize': this.pageSize},
                     success: function (result) {
                         vm.JobData = result.msg;
+                        vm.total = result.code;
                     }
                 });
             },
@@ -499,6 +528,15 @@
                 }, function () {
 
                 });
+            },
+            handleSizeChange(val) {
+                this.pageSize = val;
+                this.pageNo = 1;
+                this.search();
+            },
+            handleCurrentChange(val) {
+                this.pageNo = val;
+                this.search();
             }
         },
         created: function () {

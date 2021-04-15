@@ -45,6 +45,7 @@ import com.xlg.cms.api.model.TaskToFinished;
 import com.xlg.cms.api.model.UploadFile;
 import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
+import com.xlg.cms.api.utils.PageUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
 import com.xlg.component.dto.XlgTaskUserProgressDTO;
@@ -103,9 +104,9 @@ public class StudentTaskController {
         Page page = new Page(pageNo, pageSize);
         XlgTask model = new XlgTask();
         int finished = 0;
-        List<StudentTask> list = progress(page, model, curUserId, finished);
-        logger.info("[StudentTaskController] taskList={}", JSON.toJSONString(list));
-        return Result.ok(list);
+        Result result = progress(page, model, curUserId, finished);
+        logger.info("[StudentTaskController] result={}", JSON.toJSONString(result));
+        return result;
     }
 
     /**
@@ -144,13 +145,12 @@ public class StudentTaskController {
         model.setStartTime(startTime);
         model.setEndTime(endTime);
         model.setCreateId(curUserId);
-        List<StudentTask> list = progress(page, model, curUserId, finished);
-        return Result.ok(list);
+        return progress(page, model, curUserId, finished);
     }
 
 
-    private List<StudentTask> progress(Page page, XlgTask model, long curUserId, int finished) {
-        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(page, model);
+    private Result progress(Page page, XlgTask model, long curUserId, int finished) {
+        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(new Page(), model);
         Set<Long> taskIds = tasks.stream().map(XlgTask::getId).collect(Collectors.toSet());
 
         //1. 获取当前用户的所有进度，然后反查任务
@@ -208,11 +208,13 @@ public class StudentTaskController {
             }
             return false;
         }).collect(Collectors.toList());
-        return list;
+        int total = list.size();
+        List<StudentTask> studentTasks = PageUtils.getTaskListByPage(list, page);
+        return Result.ok(total, studentTasks);
     }
 
     /**
-     * 任务查找
+     * 任务导出
      */
     @RequestMapping("/export")
     public void export(@RequestParam("taskId") long taskId,

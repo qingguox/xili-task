@@ -132,7 +132,7 @@ public class XlgTaskDAO {
             buffer.append(" and update_time = :updateTime");
             source.addValue("updateTime", model.getEndTime());
         }
-        buffer.append(" order by id desc");
+        buffer.append(" order by id asc");
         String conditionSql = buffer.length() > 0 ? buffer.toString() : "";
         if (offset >= 0 && limit > 0) {
             conditionSql += " limit " + offset + "," + limit;

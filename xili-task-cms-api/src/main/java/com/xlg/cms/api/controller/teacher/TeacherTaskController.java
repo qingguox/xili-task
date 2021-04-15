@@ -46,6 +46,7 @@ import com.xlg.cms.api.model.TeacherTask;
 import com.xlg.cms.api.model.UploadFile;
 import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
+import com.xlg.cms.api.utils.PageUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
 import com.xlg.component.enums.IndicatorEnum;
@@ -100,53 +101,7 @@ public class TeacherTaskController {
         Page page = new Page(pageNo, pageSize);
         XlgTask model = new XlgTask();
         model.setCreateId(creator);
-        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(page, model);
-        Set<Long> taskIds = tasks.stream().map(XlgTask::getId).collect(Collectors.toSet());
-
-        // 根据id 去task——user表找总人数
-        Map<Long, Long> taskIdTOUserCountMap = Maps.newHashMap();
-        // 根据id 去user_progress表找 status = 2完成人数  未完成人数 = userCount - 完成人数
-        Map<Long, Long> taskIdTOUserFinishedMap = Maps.newHashMap();
-        taskIds.forEach(taskId -> {
-            long userCount = xlgTaskUserService.getUserCountByTaskId(taskId);
-            long userFinished = xlgTaskUserProgressService
-                    .getUserFinishedByTaskId(taskId, FINISHED.getValue());
-            taskIdTOUserCountMap.put(taskId, userCount);
-            taskIdTOUserFinishedMap.put(taskId, userFinished);
-        });
-
-        List<TeacherTask> taskShowList = tasks.stream().map(task -> {
-            List<XlgTaskCondition> conditionList = xlgTaskConditionService.getByTaskId(task.getId());
-            List<ConditionInfo> conditionInfoList = Lists.newArrayList();
-            AtomicReference<UploadFile> indFile = new AtomicReference<>(new UploadFile());
-            conditionList.forEach(condition -> {
-                ConditionInfo info = new ConditionInfo();
-                info.setStatus(String.valueOf(condition.getIndicator()));
-                conditionInfoList.add(info);
-                if (condition.getIndicator() == IndicatorEnum.STUDENT_KNOWN.getValue()) {
-                    indFile.set(JSON.parseObject(condition.getExtParams(), UploadFile.class));
-                }
-            });
-            long userCount = taskIdTOUserCountMap.get(task.getId());
-            long userFinished = taskIdTOUserFinishedMap.get(task.getId());
-            TeacherTask show = new TeacherTask();
-            show.setCreator(xlgUserService.format(task.getCreateId()));
-            show.setCreateTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getCreateTime()));
-            show.setEndTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getEndTime()));
-            show.setStartTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getStartTime()));
-            show.setStatus(TaskStatusEnum.fromValue(task.getStatus()).getDesc());
-            show.setTaskDesc(task.getDescription());
-            show.setTaskName(task.getName());
-            show.setTaskId(task.getId());
-            show.setFile(JSON.parseObject(task.getExtParams(), UploadFile.class));
-            show.setIndFile(indFile.get());
-            show.setConditionList(conditionInfoList);
-            show.setTaskUsers(userCount);
-            show.setTaskFinished(userFinished);
-            show.setTaskUnFinished(userCount - userFinished);
-            return show;
-        }).sorted(Comparator.comparingLong(TaskShow::getTaskId)).collect(Collectors.toList());
-        return Result.ok(taskShowList);
+        return progress(page, model);
     }
 
     /**
@@ -182,7 +137,11 @@ public class TeacherTaskController {
         model.setStartTime(startTime);
         model.setEndTime(endTime);
         model.setCreateId(creator);
-        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(page, model);
+        return progress(page, model);
+    }
+
+    private Result progress(Page page, XlgTask model) {
+        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(new Page(), model);
         Set<Long> taskIds = tasks.stream().map(XlgTask::getId).collect(Collectors.toSet());
 
         // 根据id 去task——user表找总人数
@@ -228,7 +187,9 @@ public class TeacherTaskController {
             show.setTaskUnFinished(userCount - userFinished);
             return show;
         }).sorted(Comparator.comparingLong(TaskShow::getTaskId)).collect(Collectors.toList());
-        return Result.ok(taskShowList);
+        int total = taskShowList.size();
+        List<TeacherTask> taskList = PageUtils.getTaskListByPage(taskShowList, page);
+        return Result.ok(total, taskList);
     }
 
     /**

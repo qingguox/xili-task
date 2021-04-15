@@ -38,6 +38,7 @@ public class XlgTaskServiceImpl implements XlgTaskService {
     @Override
     public List<XlgTask> getAllTaskByPage(Page page, XlgTask request) {
         int offset = (page.page - 1) * page.count;
+        System.out.println("offset=" + offset);
         return xlgTaskDAO.getAllTaskByPage(request, offset, page.count);
     }
 

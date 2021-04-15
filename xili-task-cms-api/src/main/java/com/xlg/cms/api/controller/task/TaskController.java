@@ -42,6 +42,7 @@ import com.xlg.cms.api.model.UploadFile;
 import com.xlg.cms.api.utils.BlobFileUtils;
 import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
+import com.xlg.cms.api.utils.PageUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
 import com.xlg.component.common.TaskConstants;
@@ -106,34 +107,8 @@ public class TaskController {
     @ResponseBody
     public Result taskList(@RequestParam("pageNo") int pageNo, @RequestParam("pageSize") int pageSize) {
         Page page = new Page(pageNo, pageSize);
-        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(page, new XlgTask());
-        List<TaskShow> taskShowList = tasks.stream().map(task -> {
-            List<XlgTaskCondition> conditionList = xlgTaskConditionService.getByTaskId(task.getId());
-            List<ConditionInfo> conditionInfoList = Lists.newArrayList();
-            AtomicReference<UploadFile> indFile = new AtomicReference<>(new UploadFile());
-            conditionList.stream().forEach(condition -> {
-                ConditionInfo info = new ConditionInfo();
-                info.setStatus(String.valueOf(condition.getIndicator()));
-                conditionInfoList.add(info);
-                if (condition.getIndicator() == IndicatorEnum.STUDENT_KNOWN.getValue()) {
-                    indFile.set(JSON.parseObject(condition.getExtParams(), UploadFile.class));
-                }
-            });
-            TaskShow show = new TaskShow();
-            show.setCreator(xlgUserService.format(task.getCreateId()));
-            show.setCreateTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getCreateTime()));
-            show.setEndTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getEndTime()));
-            show.setStartTime(DateUtils.YYYY_MM_DD_HHMMSS.print(task.getStartTime()));
-            show.setStatus(TaskStatusEnum.fromValue(task.getStatus()).getDesc());
-            show.setTaskDesc(task.getDescription());
-            show.setTaskName(task.getName());
-            show.setTaskId(task.getId());
-            show.setFile(JSON.parseObject(task.getExtParams(), UploadFile.class));
-            show.setIndFile(indFile.get());
-            show.setConditionList(conditionInfoList);
-            return show;
-        }).sorted(Comparator.comparingLong(TaskShow::getTaskId)).collect(Collectors.toList());
-        return Result.ok(taskShowList);
+        XlgTask request = new XlgTask();
+        return progress(page,  request);
     }
 
     /**
@@ -162,12 +137,16 @@ public class TaskController {
         request.setStartTime(startTime);
         request.setEndTime(endTime);
         request.setCreateId(xlgUserService.formatNameToCreateId(creator));
-        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(page, request);
+        return progress(page, request);
+    }
+
+    private Result progress(Page page, XlgTask model) {
+        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(new Page(), model);
         List<TaskShow> taskShowList = tasks.stream().map(task -> {
             List<XlgTaskCondition> conditionList = xlgTaskConditionService.getByTaskId(task.getId());
             List<ConditionInfo> conditionInfoList = Lists.newArrayList();
             AtomicReference<UploadFile> indFile = new AtomicReference<>(new UploadFile());
-            conditionList.stream().forEach(condition -> {
+            conditionList.forEach(condition -> {
                 ConditionInfo info = new ConditionInfo();
                 info.setStatus(String.valueOf(condition.getIndicator()));
                 conditionInfoList.add(info);
@@ -189,9 +168,10 @@ public class TaskController {
             show.setConditionList(conditionInfoList);
             return show;
         }).sorted(Comparator.comparingLong(TaskShow::getTaskId)).collect(Collectors.toList());
-        return Result.ok(taskShowList);
+        int total = taskShowList.size();
+        List<TaskShow> taskShows = PageUtils.getTaskListByPage(taskShowList, page);
+        return Result.ok(total, taskShows);
     }
-
 
     /**
      *  任务列表导出

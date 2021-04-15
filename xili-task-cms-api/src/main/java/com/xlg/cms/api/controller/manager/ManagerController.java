@@ -46,6 +46,7 @@ import com.xlg.cms.api.dto.XlgUserDTO;
 import com.xlg.cms.api.model.Result;
 import com.xlg.cms.api.model.UploadFile;
 import com.xlg.cms.api.utils.ExcelUtils;
+import com.xlg.cms.api.utils.PageUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
 import com.xlg.component.dto.XlgUserExtParams;
@@ -96,20 +97,7 @@ public class ManagerController {
     @ResponseBody
     public Result page(Model model, @RequestParam("pageNo") int pageNo, @RequestParam("pageSize") int pageSize) {
         Page page = new Page(pageNo, pageSize);
-        List<XlgUser> users = xlgUserService.getAllTaskByPage(page, new XlgUser());
-        List<XlgUserDTO> xlgUserDTOS = users.stream().map(cur -> {
-            XlgUserDTO dto = new XlgUserDTO();
-            dto.setAge(cur.getAge());
-            dto.setEmail(cur.getEmail());
-            dto.setId(cur.getId());
-            dto.setName(cur.getName());
-            dto.setPhone(cur.getPhone());
-            dto.setSex(cur.getSex());
-            dto.setUserId(cur.getUserId());
-            dto.setType(RoleEnum.fromValue(cur.getType()).getDesc());
-            return dto;
-        }).sorted(Comparator.comparingLong(XlgUserDTO::getId)).collect(Collectors.toList());
-        return Result.ok(xlgUserDTOS);
+        return progress(page, new XlgUser());
     }
 
     @RequestMapping("/remove")
@@ -185,7 +173,11 @@ public class ManagerController {
             request.setName(name);
         }
         request.setType(stats);
-        List<XlgUser> users = xlgUserService.getAllTaskByPage(page, request);
+        return progress(page, request);
+    }
+
+    private Result progress(Page page, XlgUser request) {
+        List<XlgUser> users = xlgUserService.getAllTaskByPage(new Page(), request);
         List<XlgUserDTO> xlgUserDTOS = users.stream().map(cur -> {
             XlgUserDTO dto = new XlgUserDTO();
             dto.setAge(cur.getAge());
@@ -198,7 +190,9 @@ public class ManagerController {
             dto.setType(RoleEnum.fromValue(cur.getType()).getDesc());
             return dto;
         }).sorted(Comparator.comparingLong(XlgUserDTO::getId)).collect(Collectors.toList());
-        return Result.ok(xlgUserDTOS);
+        int total = xlgUserDTOS.size();
+        List<XlgUserDTO> taskListByPage = PageUtils.getTaskListByPage(xlgUserDTOS, page);
+        return Result.ok(total, taskListByPage);
     }
 
     /**
