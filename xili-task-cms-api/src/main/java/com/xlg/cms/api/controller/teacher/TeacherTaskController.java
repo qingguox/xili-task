@@ -1,5 +1,6 @@
 package com.xlg.cms.api.controller.teacher;
 
+import static com.xlg.cms.api.utils.AdminUtils.AdminId;
 import static com.xlg.component.enums.UserProgressStatusEnum.DOING;
 import static com.xlg.component.enums.UserProgressStatusEnum.FINISHED;
 import static com.xlg.component.enums.UserProgressStatusEnum.UNFINISHED;
@@ -326,16 +327,10 @@ public class TeacherTaskController {
     @ResponseBody
     public Result userInfo(HttpServletRequest request) {
         Page page = new Page(1, 1);
-        // TODO 改成一个adminId 一样
-        Object user = request.getSession().getAttribute("user");
-        long curUserId = 0;
-        if (user != null) {
-            curUserId = Long.parseLong((String) user);
-        }
-
+        long adminId = AdminId(request);
         XlgUser req = new XlgUser();
-        req.setUserId(curUserId);
-        System.out.println(curUserId);
+        req.setUserId(adminId);
+        System.out.println(adminId);
         List<XlgUser> allTaskByPage = xlgUserService.getAllTaskByPage(page, req);
         System.out.println(Arrays.toString(allTaskByPage.toArray()));
         XlgUserDTO dto = new XlgUserDTO();

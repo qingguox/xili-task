@@ -1,5 +1,6 @@
 package com.xlg.cms.api.controller.student;
 
+import static com.xlg.cms.api.utils.AdminUtils.AdminId;
 import static com.xlg.component.enums.UserProgressStatusEnum.DOING;
 import static com.xlg.component.enums.UserProgressStatusEnum.FINISHED;
 import static com.xlg.component.enums.UserProgressStatusEnum.UNFINISHED;
@@ -93,18 +94,11 @@ public class StudentTaskController {
     @ResponseBody
     public Result list(@RequestParam("pageNo") int pageNo, @RequestParam("pageSize") int pageSize,
             HttpServletRequest request) {
-
-        // TODO 改成一个adminId 一样
-        Object user = request.getSession().getAttribute("user");
-        long curUserId = 0;
-        if (user != null) {
-            curUserId = Long.parseLong((String) user);
-        }
-
+        long adminId = AdminId(request);
         Page page = new Page(pageNo, pageSize);
         XlgTask model = new XlgTask();
         int finished = 0;
-        Result result = progress(page, model, curUserId, finished);
+        Result result = progress(page, model, adminId, finished);
         logger.info("[StudentTaskController] result={}", JSON.toJSONString(result));
         return result;
     }
@@ -123,18 +117,12 @@ public class StudentTaskController {
             @RequestParam("finished") int finished,
             @RequestParam("pageNo") int pageNo,
             @RequestParam("pageSize") int pageSize, HttpServletRequest request) {
-
-        // TODO 改成一个adminId 一样
-        Object user = request.getSession().getAttribute("user");
-        long curUserId = 0;
-        if (user != null) {
-            curUserId = Long.parseLong((String) user);
-        }
+        long adminId = AdminId(request);
         logger.info(
                 "taskId={}, taskName={}, status={}, creator={}, finished={}, taskDesc={}, startTime={}, endTime={}, pageNo={}, "
                         + "pageSize={}",
                 taskId,
-                taskName, status, curUserId, finished, taskDesc, startTime, endTime, pageNo, pageSize);
+                taskName, status, adminId, finished, taskDesc, startTime, endTime, pageNo, pageSize);
 
         Page page = new Page(pageNo, pageSize);
         XlgTask model = new XlgTask();
@@ -144,8 +132,8 @@ public class StudentTaskController {
         model.setDescription(taskDesc);
         model.setStartTime(startTime);
         model.setEndTime(endTime);
-        model.setCreateId(curUserId);
-        return progress(page, model, curUserId, finished);
+        model.setCreateId(adminId);
+        return progress(page, model, adminId, finished);
     }
 
 
@@ -227,7 +215,6 @@ public class StudentTaskController {
             @RequestParam("pageNo") int pageNo,
             @RequestParam("pageSize") int pageSize, HttpServletRequest request, HttpServletResponse response) {
 
-
         Object user = request.getSession().getAttribute("user");
         long createId = 0;
         if (user != null) {
@@ -284,16 +271,10 @@ public class StudentTaskController {
     @ResponseBody
     public Result userInfo(HttpServletRequest request) {
         Page page = new Page(1, 1);
-        // TODO 改成一个adminId 一样
-        Object user = request.getSession().getAttribute("user");
-        long curUserId = 0;
-        if (user != null) {
-            curUserId = Long.parseLong((String) user);
-        }
-
+        long adminId = AdminId(request);
         XlgUser req = new XlgUser();
-        req.setUserId(curUserId);
-        System.out.println(curUserId);
+        req.setUserId(adminId);
+        System.out.println(adminId);
         List<XlgUser> allTaskByPage = xlgUserService.getAllTaskByPage(page, req);
         System.out.println(Arrays.toString(allTaskByPage.toArray()));
         XlgUserDTO dto = new XlgUserDTO();
@@ -344,12 +325,7 @@ public class StudentTaskController {
     @ResponseBody
     public Result toDo(@RequestBody TaskToFinished taskToFinished, HttpServletRequest request) {
         logger.info("[StudentTaskController] receive taskToFinished={}", JSON.toJSONString(taskToFinished));
-        // TODO 改成一个adminId 一样
-        Object user = request.getSession().getAttribute("user");
-        long curUserId = 0;
-        if (user != null) {
-            curUserId = Long.parseLong((String) user);
-        }
+        long adminId = AdminId(request);
         // 指标值
         long indicator = taskToFinished.getStatus();
         long taskId = taskToFinished.getTaskId();
@@ -359,7 +335,7 @@ public class StudentTaskController {
         int actionDate = Integer.parseInt(DateUtils.YYYY_MM_DD.print(currentMills));
         // 1. 构造进度DTO
         XlgTaskUserProgressDTO userProgressDTO = new XlgTaskUserProgressDTO();
-        userProgressDTO.setUserId(curUserId);
+        userProgressDTO.setUserId(adminId);
         userProgressDTO.setIndicator(indicator);
         userProgressDTO.setTaskId(taskId);
         userProgressDTO.setActionValue(1);
