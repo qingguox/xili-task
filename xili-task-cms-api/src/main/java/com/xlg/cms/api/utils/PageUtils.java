@@ -15,10 +15,9 @@ public class PageUtils {
         int start = (page.getPage() - 1) * page.getCount();
         int end = start + page.getCount();
         List<T> result = Lists.newArrayList();
-        for (int i = start; i < taskList.size() && i <= end; i++) {
+        for (int i = start; i < taskList.size() && i < end; i++) {
             result.add(taskList.get(i));
         }
         return result;
     }
-
 }
