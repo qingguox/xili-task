@@ -1,6 +1,5 @@
 package com.xlg.cms.api.controller.task;
 
-import static com.xlg.cms.api.utils.AdminUtils.AdminId;
 import static com.xlg.component.common.TaskConstants.ONE;
 import static com.xlg.component.common.TaskConstants.THREE;
 import static com.xlg.component.enums.XlgTaskCache.TASK_REGISTER;
@@ -45,6 +44,7 @@ import com.xlg.cms.api.dto.TaskSaveDTO.ConditionInfo;
 import com.xlg.cms.api.model.Result;
 import com.xlg.cms.api.model.TaskShow;
 import com.xlg.cms.api.model.UploadFile;
+import com.xlg.cms.api.utils.AdminUtils;
 import com.xlg.cms.api.utils.BlobFileUtils;
 import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
@@ -65,7 +65,6 @@ import com.xlg.component.model.XlgTask;
 import com.xlg.component.model.XlgTaskCondition;
 import com.xlg.component.model.XlgTaskUser;
 import com.xlg.component.model.XlgTaskUserProgress;
-import com.xlg.component.model.XlgUser;
 import com.xlg.component.service.XlgIndicatorService;
 import com.xlg.component.service.XlgRegisterService;
 import com.xlg.component.service.XlgTaskConditionService;
@@ -88,6 +87,8 @@ public class TaskController {
 
     @Resource
     private RestTemplate restTemplate;
+    @Resource
+    private AdminUtils adminUtils;
     @Resource
     private XlgIndicatorService xlgIndicatorService;
     @Resource
@@ -272,8 +273,7 @@ public class TaskController {
     @ResponseBody
     public Result manualOffline(@RequestParam("taskId") long taskId, @RequestParam("time") long time,
             HttpServletRequest request) {
-        long adminId = AdminId(request);
-        boolean hasAdmin = checkAdmin(adminId);
+        boolean hasAdmin = adminUtils.CheckAdmin(request, Lists.newArrayList(RoleEnum.MANAGER, RoleEnum.TEACHER));
         if (!hasAdmin) {
             return Result.ok(401, "没有权限！！！");
         }
@@ -295,8 +295,7 @@ public class TaskController {
     @RequestMapping("/edit")
     @ResponseBody
     public Result edit(@RequestBody TaskSaveDTO taskSaveDTO, HttpServletRequest request) {
-        long adminId = AdminId(request);
-        boolean hasAdmin = checkAdmin(adminId);
+        boolean hasAdmin = adminUtils.CheckAdmin(request, Lists.newArrayList(RoleEnum.MANAGER, RoleEnum.TEACHER));
         if (!hasAdmin) {
             return Result.ok(401, "没有权限！！！");
         }
@@ -334,8 +333,7 @@ public class TaskController {
         System.out.println("***********************************************************");
         System.out.println(JSON.toJSONString(taskSaveDTO));
         System.out.println("***********************************************************");
-        long adminId = AdminId(request);
-        boolean hasAdmin = checkAdmin(adminId);
+        boolean hasAdmin = adminUtils.CheckAdmin(request, Lists.newArrayList(RoleEnum.MANAGER, RoleEnum.TEACHER));
         if (!hasAdmin) {
             return Result.ok(401, "没有权限！！！");
         }
@@ -379,20 +377,6 @@ public class TaskController {
         return Result.ok("任务添加成功!!");
     }
 
-    /**
-     * 校验当前用户是否能操作add del update
-     */
-    private boolean checkAdmin(long adminId) {
-        XlgUser request = new XlgUser();
-        request.setUserId(adminId);
-        XlgUser user = xlgUserService.getAllTaskByPage(new Page(1, 1), request).stream().findFirst().orElse(null);
-        if (user != null) {
-            int type = user.getType();
-            return type == RoleEnum.TEACHER.getValue() || type == RoleEnum.MANAGER.getValue();
-        } else {
-            return false;
-        }
-    }
 
     @RequestMapping("/redis")
     public void getRedis() {

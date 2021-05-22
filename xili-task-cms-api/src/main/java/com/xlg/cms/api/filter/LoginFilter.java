@@ -44,7 +44,7 @@ public class LoginFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(LoginFilter.class);
     private static Set<String> SUPPORT_URLS = Sets.newHashSet("task", "teacher", "manager", "student");
     private static Set<String> NOT_SUPPORT_URLS =
-            Sets.newHashSet("/login.html", "/logout", "/error", "/error/", "/captcha", "/login", "/js/**",
+            Sets.newHashSet("/login.html", "/logout", "/error1", "/error1/", "/captcha", "/login", "/js/**",
                     "/html/**", "/image/**", "/css/**", "/rmqsend", "/file", "/actuator/prometheus");
     private static Map<Integer, List<String>> roleUrlMap = Maps.newHashMap();
 
@@ -107,7 +107,7 @@ public class LoginFilter implements Filter {
                     // TODO 查询数据库是否存在用户
                     String passwordFromMd5 = password;
                     passwordFromMd5 = DigestUtils.md5DigestAsHex(password.getBytes());
-                    AllStatusEnum hasUser = xlgUserService.hasUser(Long.parseLong(username), passwordFromMd5);
+                    AllStatusEnum hasUser = xlgUserService.hasUser(Long.parseLong(username), passwordFromMd5, role);
                     if (hasUser != DETACH) {
                         response.setHeader("refresh", "0;URL=/login.html");
                     }

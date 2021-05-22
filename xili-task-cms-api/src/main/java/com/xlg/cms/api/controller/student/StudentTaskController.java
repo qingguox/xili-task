@@ -1,6 +1,5 @@
 package com.xlg.cms.api.controller.student;
 
-import static com.xlg.cms.api.utils.AdminUtils.AdminId;
 import static com.xlg.component.enums.UserProgressStatusEnum.DOING;
 import static com.xlg.component.enums.UserProgressStatusEnum.FINISHED;
 import static com.xlg.component.enums.UserProgressStatusEnum.UNFINISHED;
@@ -46,6 +45,7 @@ import com.xlg.cms.api.model.Result;
 import com.xlg.cms.api.model.StudentTask;
 import com.xlg.cms.api.model.TaskToFinished;
 import com.xlg.cms.api.model.UploadFile;
+import com.xlg.cms.api.utils.AdminUtils;
 import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
 import com.xlg.cms.api.utils.PageUtils;
@@ -80,6 +80,8 @@ public class StudentTaskController {
     @Autowired
     private XlgTaskService xlgTaskService;
     @Autowired
+    private AdminUtils adminUtils;
+    @Autowired
     private XlgTaskUserProgressService xlgTaskUserProgressService;
     @Autowired
     private XlgUserService xlgUserService;
@@ -97,7 +99,11 @@ public class StudentTaskController {
     @ResponseBody
     public Result list(@RequestParam("pageNo") int pageNo, @RequestParam("pageSize") int pageSize,
             HttpServletRequest request) {
-        long adminId = AdminId(request);
+        long adminId = adminUtils.AdminId(request);
+        boolean checkAdmin = adminUtils.CheckAdmin(request, Lists.newArrayList(RoleEnum.STUDENT));
+        if (!checkAdmin) {
+            return Result.ok(401, "没有权限！！");
+        }
         Page page = new Page(pageNo, pageSize);
         XlgTask model = new XlgTask();
         int finished = 0;
@@ -121,13 +127,17 @@ public class StudentTaskController {
             @RequestParam("creator") String creator,
             @RequestParam("pageNo") int pageNo,
             @RequestParam("pageSize") int pageSize, HttpServletRequest request) {
-        long adminId = AdminId(request);
+        long adminId = adminUtils.AdminId(request);
         logger.info(
                 "taskId={}, taskName={}, status={}, creator={}, finished={}, taskDesc={}, startTime={}, endTime={}, pageNo={}, "
                         + "pageSize={}",
                 taskId,
                 taskName, status, creator, finished, taskDesc, startTime, endTime, pageNo, pageSize);
 
+        boolean checkAdmin = adminUtils.CheckAdmin(request, Lists.newArrayList(RoleEnum.STUDENT));
+        if (!checkAdmin) {
+            return Result.ok(401, "没有权限！！");
+        }
         XlgUser user = new XlgUser();
         user.setType(RoleEnum.TEACHER.getValue());
         user.setName(creator);
@@ -296,7 +306,7 @@ public class StudentTaskController {
     @ResponseBody
     public Result userInfo(HttpServletRequest request) {
         Page page = new Page(1, 1);
-        long adminId = AdminId(request);
+        long adminId = adminUtils.AdminId(request);
         XlgUser req = new XlgUser();
         req.setUserId(adminId);
         System.out.println(adminId);
@@ -365,7 +375,7 @@ public class StudentTaskController {
     @ResponseBody
     public Result toDo(@RequestBody TaskToFinished taskToFinished, HttpServletRequest request) {
         logger.info("[StudentTaskController] receive taskToFinished={}", JSON.toJSONString(taskToFinished));
-        long adminId = AdminId(request);
+        long adminId = adminUtils.AdminId(request);
         // 指标值
         long indicator = taskToFinished.getStatus();
         long taskId = taskToFinished.getTaskId();

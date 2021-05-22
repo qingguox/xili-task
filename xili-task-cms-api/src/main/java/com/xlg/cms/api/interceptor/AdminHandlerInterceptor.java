@@ -89,7 +89,7 @@ public class AdminHandlerInterceptor implements HandlerInterceptor {
             request.getSession().setAttribute("code", 401);
             request.getSession().setAttribute("msg", "没有权限!");
             reflectSetparam(request, "Request Method", "get");
-            request.getRequestDispatcher("/error").forward(request, response);
+            request.getRequestDispatcher("/error1").forward(request, response);
             return false;
         }
         log.info("preHandle:请求前调用");

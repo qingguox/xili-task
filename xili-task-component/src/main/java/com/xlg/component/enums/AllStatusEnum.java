@@ -10,7 +10,7 @@ import com.xlg.component.utils.EnumUtils;
 public enum AllStatusEnum implements IntDescValue {
 
     UNKNOWN(0, "未知", "未知", "用户不存在"),
-    TACH(1, "在线", "有效", "用户账号密码错误"),
+    TACH(1, "在线", "有效", "用户账号密码错误或者角色不对"),
     DETACH(2, "移除", "无效", "用户正常");
 
     @SuppressWarnings("checkstyle:VisibilityModifier")

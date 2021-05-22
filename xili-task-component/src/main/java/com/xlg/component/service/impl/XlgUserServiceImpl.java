@@ -60,14 +60,14 @@ public class XlgUserServiceImpl implements XlgUserService {
     }
 
     @Override
-    public AllStatusEnum hasUser(long userId, String passwordFromMd5) {
+    public AllStatusEnum hasUser(long userId, String passwordFromMd5, int roleType) {
         XlgUser byUserId = xlgUserDAO.getByUserId(userId);
-        if (byUserId == null) {
+        if (byUserId == null || roleType == 0) {
             return AllStatusEnum.UNKNOWN;
         }
         String extParams = byUserId.getExtParams();
         XlgUserExtParams xlgUserExtParams = JSON.parseObject(extParams, XlgUserExtParams.class);
-        if (!xlgUserExtParams.getPasswordFromMd5().equals(passwordFromMd5)) {
+        if (!xlgUserExtParams.getPasswordFromMd5().equals(passwordFromMd5) || byUserId.getType() != roleType) {
             return AllStatusEnum.TACH;
         }
         return AllStatusEnum.DETACH;

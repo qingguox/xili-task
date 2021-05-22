@@ -261,6 +261,11 @@
                         'pageNo': this.pageNo,
                     },
                     success: function (result) {
+                        if (result.code == 401) {
+                            vm.$Notice.error({
+                                desc: result.msg
+                            });
+                        }
                         vm.JobData = result.msg;
                         for (var i=0; i<vm.JobData.length;i++) {
                             if (vm.JobData[i].userFinished == 2) {
@@ -274,6 +279,11 @@
                             }
                         }
                         vm.total = result.code;
+                    },
+                    error: function () {
+                        vm.$Notice.error({
+                            desc: "用户没有权限！！"
+                        });
                     }
                 });
             },
@@ -366,6 +376,12 @@
                     type: "post",
                     data: {'time': (new Date()).toString(), 'pageNo': this.pageNo, 'pageSize': this.pageSize},
                     success: function (result) {
+                        if (code == 401) {
+                            vm.$Notice.error({
+                                desc:  msg
+                            });
+                            //window.location.href = "task/index.html"
+                        }
                         vm.JobData = result.msg;
                         for (var i=0; i<vm.JobData.length;i++) {
                             if (vm.JobData[i].userFinished == 2) {
@@ -381,14 +397,9 @@
                         vm.total = result.code;
                     },
                     error: function () {
-                        let code = 401
-                        let msg = "很抱歉，您没有权限！！！"
-                        if (code == 401) {
-                            vm.$Notice.error({
-                                desc:  msg
-                            });
-                            window.location.href = "task/index.html"
-                        }
+                        vm.$Notice.error({
+                            desc: "用户没有权限！！"
+                        });
                     }
                 });
             },

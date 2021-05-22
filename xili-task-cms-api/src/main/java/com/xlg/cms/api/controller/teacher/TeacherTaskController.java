@@ -1,6 +1,5 @@
 package com.xlg.cms.api.controller.teacher;
 
-import static com.xlg.cms.api.utils.AdminUtils.AdminId;
 import static com.xlg.component.enums.UserProgressStatusEnum.DOING;
 import static com.xlg.component.enums.UserProgressStatusEnum.FINISHED;
 import static com.xlg.component.enums.UserProgressStatusEnum.UNFINISHED;
@@ -47,6 +46,7 @@ import com.xlg.cms.api.model.Result;
 import com.xlg.cms.api.model.TaskShow;
 import com.xlg.cms.api.model.TeacherTask;
 import com.xlg.cms.api.model.UploadFile;
+import com.xlg.cms.api.utils.AdminUtils;
 import com.xlg.cms.api.utils.DateUtils;
 import com.xlg.cms.api.utils.ExcelUtils;
 import com.xlg.cms.api.utils.PageUtils;
@@ -84,6 +84,8 @@ public class TeacherTaskController {
     @Autowired
     private XlgUserService xlgUserService;
     @Autowired
+    private AdminUtils adminUtils;
+    @Autowired
     private XlgTaskUserService xlgTaskUserService;
     @Autowired
     private XlgTaskUserProgressService xlgTaskUserProgressService;
@@ -97,14 +99,14 @@ public class TeacherTaskController {
     @ResponseBody
     public Result taskList(@RequestParam("pageNo") int pageNo, @RequestParam("pageSize") int pageSize,
             HttpServletRequest request) {
-        Object user = request.getSession().getAttribute("user");
-        long creator = 0;
-        if (user != null) {
-            creator = Long.parseLong((String) user);
+        boolean checkAdmin = adminUtils.CheckAdmin(request, Lists.newArrayList(RoleEnum.TEACHER, RoleEnum.MANAGER));
+        if (!checkAdmin) {
+            return Result.error(401, "很抱歉，您没有权限!!");
         }
+        long createId = adminUtils.AdminId(request);
         Page page = new Page(pageNo, pageSize);
         XlgTask model = new XlgTask();
-        model.setCreateId(creator);
+        model.setCreateId(createId);
         return progress(page, model);
     }
 
@@ -122,6 +124,10 @@ public class TeacherTaskController {
             @RequestParam("pageNo") int pageNo,
             @RequestParam("pageSize") int pageSize, HttpServletRequest request) {
 
+        boolean checkAdmin = adminUtils.CheckAdmin(request, Lists.newArrayList(RoleEnum.TEACHER, RoleEnum.MANAGER));
+        if (!checkAdmin) {
+            return Result.error(401, "很抱歉，您没有权限!!");
+        }
         Object user = request.getSession().getAttribute("user");
         long creator = 0;
         if (user != null) {
@@ -328,7 +334,7 @@ public class TeacherTaskController {
     @ResponseBody
     public Result userInfo(HttpServletRequest request) {
         Page page = new Page(1, 1);
-        long adminId = AdminId(request);
+        long adminId = adminUtils.AdminId(request);
         XlgUser req = new XlgUser();
         req.setUserId(adminId);
         System.out.println(adminId);
@@ -345,6 +351,9 @@ public class TeacherTaskController {
             dto.setSex(cur.getSex());
             dto.setUserId(cur.getUserId());
             dto.setPassword("");
+            if (cur.getType() != RoleEnum.TEACHER.getValue()) {
+                return Result.error(401, "很抱歉，您没有权限!!");
+            }
             dto.setType(RoleEnum.fromValue(cur.getType()).getDesc());
         }
         return Result.ok(dto);

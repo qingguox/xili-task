@@ -87,11 +87,12 @@ public class LoginController {
         // TODO md5 加密
         String passwordFromMd5 = password;
         passwordFromMd5 = DigestUtils.md5DigestAsHex(password.getBytes());
-        AllStatusEnum hasUser = xlgUserService.hasUser(Long.parseLong(username), passwordFromMd5);
+        AllStatusEnum hasUser = xlgUserService.hasUser(Long.parseLong(username), passwordFromMd5, Integer.parseInt(role));
         logger.info("hasUser={}", JSON.toJSONString(hasUser));
         if (hasUser == AllStatusEnum.UNKNOWN || hasUser == AllStatusEnum.TACH) {
             return Result.error(hasUser.thirdDesc);
         }
+
         token.setPassword(passwordFromMd5);
         // 判断是否自动登录
         if (rememberMe != null) {
@@ -163,7 +164,7 @@ public class LoginController {
     /**
      * 处理错误页面
      */
-    @GetMapping("/error")
+    @GetMapping("/error1")
     public String error2(HttpServletRequest request) {
         Integer code = (Integer) request.getSession().getAttribute("code");
         String msg = (String) request.getSession().getAttribute("msg");
@@ -180,7 +181,7 @@ public class LoginController {
     }
 
     public static void main(String[] args) {
-        String password = "23134234";
+        String password = "3170211030";
         String s = DigestUtils.md5DigestAsHex(password.getBytes());
         System.out.println(s);
     }
