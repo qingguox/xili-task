@@ -225,6 +225,11 @@
                     data: JSON.stringify(json),
                     success: function(result) {
                         console.log(result.code)
+                        if (result.code == 401) {
+                            vm.$Notice.success({
+                                desc: result.msg
+                            });
+                        }
                         if(result.code == "200"){
                             window.parent.location.reload();
                             //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();

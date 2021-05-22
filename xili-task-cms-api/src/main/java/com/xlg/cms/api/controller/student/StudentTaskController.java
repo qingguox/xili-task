@@ -23,12 +23,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +52,7 @@ import com.xlg.cms.api.utils.PageUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
 import com.xlg.component.dto.XlgTaskUserProgressDTO;
+import com.xlg.component.dto.XlgUserExtParams;
 import com.xlg.component.enums.IndicatorEnum;
 import com.xlg.component.enums.RoleEnum;
 import com.xlg.component.enums.TaskStatusEnum;
@@ -115,6 +118,7 @@ public class StudentTaskController {
             @RequestParam("startTime") long startTime,
             @RequestParam("endTime") long endTime,
             @RequestParam("finished") int finished,
+            @RequestParam("creator") String creator,
             @RequestParam("pageNo") int pageNo,
             @RequestParam("pageSize") int pageSize, HttpServletRequest request) {
         long adminId = AdminId(request);
@@ -122,8 +126,14 @@ public class StudentTaskController {
                 "taskId={}, taskName={}, status={}, creator={}, finished={}, taskDesc={}, startTime={}, endTime={}, pageNo={}, "
                         + "pageSize={}",
                 taskId,
-                taskName, status, adminId, finished, taskDesc, startTime, endTime, pageNo, pageSize);
+                taskName, status, creator, finished, taskDesc, startTime, endTime, pageNo, pageSize);
 
+        XlgUser user = new XlgUser();
+        user.setType(RoleEnum.TEACHER.getValue());
+        user.setName(creator);
+        List<XlgUser> creatorList = xlgUserService.getAllTaskByPage(new Page(), user);
+
+        System.out.println(Arrays.toString(creatorList.toArray()));
         Page page = new Page(pageNo, pageSize);
         XlgTask model = new XlgTask();
         model.setId(taskId);
@@ -132,17 +142,33 @@ public class StudentTaskController {
         model.setDescription(taskDesc);
         model.setStartTime(startTime);
         model.setEndTime(endTime);
-        model.setCreateId(adminId);
-        return progress(page, model, adminId, finished);
+
+        List<StudentTask> result = creatorList.stream().map(cur -> {
+            model.setCreateId(cur.getUserId());
+            return progressInner(model, adminId, finished);
+        }).flatMap(Collection::stream).collect(Collectors.toList());
+        int total = result.size();
+        List<StudentTask> studentTasks = PageUtils.getTaskListByPage(result, page);
+        return Result.ok(total, studentTasks);
     }
 
 
     private Result progress(Page page, XlgTask model, long curUserId, int finished) {
+        List<StudentTask> list = progressInner(model, curUserId, finished);
+        int total = list.size();
+        List<StudentTask> studentTasks = PageUtils.getTaskListByPage(list, page);
+        return Result.ok(total, studentTasks);
+    }
+
+    private List<StudentTask> progressInner(XlgTask model, long curUserId, int finished) {
         List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(new Page(), model);
         Set<Long> taskIds = tasks.stream().map(XlgTask::getId).collect(Collectors.toSet());
 
         //1. 获取当前用户的所有进度，然后反查任务
         List<XlgTaskUserProgress> progressList = xlgTaskUserProgressService.getProgressListByUserId(taskIds, curUserId);
+        if (CollectionUtils.isEmpty(progressList)) {
+            return Lists.newArrayList();
+        }
         //
         List<Long> taskIdList =
                 progressList.stream().map(XlgTaskUserProgress::getTaskId).distinct().collect(Collectors.toList());
@@ -196,9 +222,7 @@ public class StudentTaskController {
             }
             return false;
         }).collect(Collectors.toList());
-        int total = list.size();
-        List<StudentTask> studentTasks = PageUtils.getTaskListByPage(list, page);
-        return Result.ok(total, studentTasks);
+        return list;
     }
 
     /**
@@ -212,6 +236,7 @@ public class StudentTaskController {
             @RequestParam("startTime") long startTime,
             @RequestParam("endTime") long endTime,
             @RequestParam("finished") int finished,
+            @RequestParam("creator") String creator,
             @RequestParam("pageNo") int pageNo,
             @RequestParam("pageSize") int pageSize, HttpServletRequest request, HttpServletResponse response) {
 
@@ -226,7 +251,7 @@ public class StudentTaskController {
                 taskId,
                 taskName, status, createId, taskDesc, startTime, endTime, pageNo, pageSize);
 
-        Result search = search(taskId, taskName, status, taskDesc, startTime, endTime, finished, pageNo, pageSize, request);
+        Result search = search(taskId, taskName, status, taskDesc, startTime, endTime, finished, creator, pageNo, pageSize, request);
         Object msg = search.get("msg");
         List<StudentTask> dataList = Lists.newArrayList();
         if (!Objects.isNull(msg)) {
@@ -234,18 +259,18 @@ public class StudentTaskController {
         }
 
         String userName = xlgUserService.format(createId);
-        AtomicReference<String> creator = new AtomicReference<>();
+        AtomicReference<String> creatorN = new AtomicReference<>();
         Workbook workbook = ExcelUtils.createWorkBook();
         Sheet sheet = workbook.createSheet();
         ExcelUtils.writeHeader(sheet,
                 ImmutableList.of("任务id", "任务名称", "任务开始时间", "任务结束时间",
                         "任务状态", "任务创建时间", "任务备注", "创建人", "学生完成"));
 
-        creator.set("");
+        creatorN.set("");
         if (isNotEmpty(dataList)) {
             dataList.forEach(data -> {
                 List<Object> values = Lists.newArrayList();
-                creator.set(data.getCreator());
+                creatorN.set(data.getCreator());
                 values.add(data.getTaskId());
                 values.add(data.getTaskName());
                 values.add(data.getStartTime());
@@ -287,7 +312,11 @@ public class StudentTaskController {
             dto.setPhone(cur.getPhone());
             dto.setSex(cur.getSex());
             dto.setUserId(cur.getUserId());
+            dto.setPassword("");
             dto.setType(RoleEnum.fromValue(cur.getType()).getDesc());
+            if (cur.getType() != RoleEnum.STUDENT.getValue()) {
+                return Result.error(401, "很抱歉，您没有权限!!");
+            }
         }
         return Result.ok(dto);
     }
@@ -296,6 +325,11 @@ public class StudentTaskController {
     @PostMapping("/user/edit")
     @ResponseBody
     public Result edit(@RequestBody XlgUserDTO xlgUserDTO) {
+        XlgUser request = new XlgUser();
+        request.setId(xlgUserDTO.getId());
+        request.setUserId(xlgUserDTO.getUserId());
+        XlgUser xlgUser = xlgUserService.getAllTaskByPage(new Page(1, 1), request).stream().findFirst().orElse(null);
+
         XlgUser user = new XlgUser();
         user.setAge(xlgUserDTO.getAge());
         user.setEmail(xlgUserDTO.getEmail());
@@ -304,21 +338,27 @@ public class StudentTaskController {
         user.setPhone(xlgUserDTO.getPhone());
         user.setSex(xlgUserDTO.getSex());
         user.setUserId(xlgUserDTO.getUserId());
+        String password = xlgUserDTO.getPassword();
+        if (StringUtils.isBlank(password)) {
+            user.setExtParams(xlgUser.getExtParams());
+        } else {
+            XlgUserExtParams xlgUserExtParams = new XlgUserExtParams();
+            xlgUserExtParams.setPasswordFromMd5(DigestUtils.md5DigestAsHex(password.getBytes()));
+            user.setExtParams(JSON.toJSONString(xlgUserExtParams));
+        }
         user.setUpdateTime(System.currentTimeMillis());
         user.setType(RoleEnum.valueOfDesc(xlgUserDTO.getType()).value);
         System.out.println(user.toString());
         int count = xlgUserService.update(user);
         if (count > 0) {
-            return Result.ok("修改成功");
+            return Result.ok(200, "修改成功");
         } else {
-            return Result.error("修改失败");
+            return Result.error(500, "修改失败");
         }
     }
 
     /**
      * 去完成任务
-     * @param taskToFinished
-     * @param request
      * @return
      */
     @PostMapping("/todo")

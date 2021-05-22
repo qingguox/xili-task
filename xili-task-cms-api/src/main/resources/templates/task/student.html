@@ -268,6 +268,9 @@
                             }
                             if (vm.JobData[i].userFinished == 3) {
                                 vm.JobData[i].userFinishSow = "未完成"
+                                if (vm.JobData[i].status == "进行中") {
+                                    vm.JobData[i].picName = "block"
+                                }
                             }
                         }
                         vm.total = result.code;

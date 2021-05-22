@@ -44,7 +44,7 @@ public class FileCommonController {
 
 
     /**
-     * 文件上传
+     * upload file
      */
     @RequestMapping(value = "/upload/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
@@ -77,12 +77,13 @@ public class FileCommonController {
         }
     }
 
+    /**
+     * download file
+     */
     @RequestMapping(value = "/download/{date}/{path}")
     public String download(HttpServletRequest request, @PathVariable String date, @PathVariable String path, HttpServletResponse response)
             throws IOException {
-
         System.out.println(path);
-
         String filename = date + "/" + path;
         String filePath = uploadPath;
         File file = new File(filePath + "/" + filename);
@@ -108,15 +109,13 @@ public class FileCommonController {
                 }
 
             } catch (Exception e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            System.out.println("----------file download---" + filename);
+            System.out.println("----------file download--------" + filename);
             try {
                 bis.close();
                 fis.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }

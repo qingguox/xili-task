@@ -62,7 +62,7 @@
                     </i-select>
                     <el-link v-if="item.status == 2" type="success" @click="download(formQuartz.indFile)" > {{ formQuartz.indFile.name }}
                     </el-link>
-                    <el-link v-if="item.status == 1" type="success" @click="download(formQuartz.uploadFile)" > {{ formQuartz.uploadFile.name }}
+                    <el-link v-if="item.status == 1 && formQuartz.uploadFile!=null" type="success" @click="download(formQuartz.uploadFile)" > {{ formQuartz.uploadFile.name }}
                     </el-link>
                 </div><br/><br/><br/>
             </div>

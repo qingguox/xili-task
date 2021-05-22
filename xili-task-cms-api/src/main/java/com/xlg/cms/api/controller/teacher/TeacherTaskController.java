@@ -23,12 +23,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +52,7 @@ import com.xlg.cms.api.utils.ExcelUtils;
 import com.xlg.cms.api.utils.PageUtils;
 import com.xlg.cms.api.utils.TemplateStoreFileUtil;
 import com.xlg.component.common.Page;
+import com.xlg.component.dto.XlgUserExtParams;
 import com.xlg.component.enums.IndicatorEnum;
 import com.xlg.component.enums.RoleEnum;
 import com.xlg.component.enums.TaskStatusEnum;
@@ -194,7 +197,7 @@ public class TeacherTaskController {
     }
 
     /**
-     * 任务查找
+     * 任务导出
      */
     @RequestMapping("/export")
     public void export(@RequestParam("taskId") long taskId,
@@ -265,8 +268,6 @@ public class TeacherTaskController {
      */
     @RequestMapping("/finished-export")
     public void finishedExport(@RequestParam("taskId") long taskId, HttpServletRequest request, HttpServletResponse response) {
-
-
         List<Long> dataList = Lists.newArrayList();
         List<Long> finishedUserIdList = xlgTaskUserProgressService.getStatusByTaskId(taskId, Lists.newArrayList(FINISHED.getValue()));
         List<Long> unfinishedUserIdList = xlgTaskUserProgressService.getStatusByTaskId(taskId, Lists.newArrayList(UNFINISHED.getValue(),
@@ -343,6 +344,7 @@ public class TeacherTaskController {
             dto.setPhone(cur.getPhone());
             dto.setSex(cur.getSex());
             dto.setUserId(cur.getUserId());
+            dto.setPassword("");
             dto.setType(RoleEnum.fromValue(cur.getType()).getDesc());
         }
         return Result.ok(dto);
@@ -352,6 +354,11 @@ public class TeacherTaskController {
     @PostMapping("/user/edit")
     @ResponseBody
     public Result edit(@RequestBody XlgUserDTO xlgUserDTO) {
+        XlgUser request = new XlgUser();
+        request.setId(xlgUserDTO.getId());
+        request.setUserId(xlgUserDTO.getUserId());
+        XlgUser xlgUser = xlgUserService.getAllTaskByPage(new Page(1, 1), request).stream().findFirst().orElse(null);
+
         XlgUser user = new XlgUser();
         user.setAge(xlgUserDTO.getAge());
         user.setEmail(xlgUserDTO.getEmail());
@@ -360,6 +367,14 @@ public class TeacherTaskController {
         user.setPhone(xlgUserDTO.getPhone());
         user.setSex(xlgUserDTO.getSex());
         user.setUserId(xlgUserDTO.getUserId());
+        String password = xlgUserDTO.getPassword();
+        if (StringUtils.isBlank(password)) {
+            user.setExtParams(xlgUser.getExtParams());
+        } else {
+            XlgUserExtParams xlgUserExtParams = new XlgUserExtParams();
+            xlgUserExtParams.setPasswordFromMd5(DigestUtils.md5DigestAsHex(password.getBytes()));
+            user.setExtParams(JSON.toJSONString(xlgUserExtParams));
+        }
         user.setUpdateTime(System.currentTimeMillis());
         user.setType(RoleEnum.valueOfDesc(xlgUserDTO.getType()).value);
         System.out.println(user.toString());

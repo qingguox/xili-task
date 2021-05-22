@@ -36,4 +36,8 @@ public class XlgRegisterServiceImpl implements XlgRegisterService {
         return xlgRegisterDAO.getByTaskIdAndTimeAndStatus(taskId, actionTime, status);
     }
 
+    @Override
+    public XlgRegister getByTaskId(long taskId) {
+        return xlgRegisterDAO.getByTaskId(taskId);
+    }
 }

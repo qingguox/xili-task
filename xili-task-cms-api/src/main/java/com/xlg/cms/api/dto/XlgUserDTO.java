@@ -49,6 +49,11 @@ public class XlgUserDTO {
     public String email;
 
     /**
+     * 密码
+     */
+    public String password;
+
+    /**
      * 扩展字段
      */
     public String extParams;
@@ -125,6 +130,14 @@ public class XlgUserDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getExtParams() {

@@ -12,12 +12,12 @@ import com.xlg.component.dto.MessageDTO;
  * Created on 2021-03-30
  */
 @Service
-public class XlgTaskStatusChangedProcessorStrategy {
+public class XlgTaskStatusChangedProcessorStrategyFactory {
 
     private final List<XlgTaskStatusChangedProcessor> processors;
 
     @Autowired
-    public XlgTaskStatusChangedProcessorStrategy(List<XlgTaskStatusChangedProcessor> processors) {
+    public XlgTaskStatusChangedProcessorStrategyFactory(List<XlgTaskStatusChangedProcessor> processors) {
         this.processors = processors;
     }
 

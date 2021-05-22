@@ -519,6 +519,11 @@
                         type: "post",
                         data: {'time': (new Date()).getTime(), 'taskId': taskId},
                         success: function (result) {
+                            if (result.code == 401) {
+                                vm.$Notice.success({
+                                    desc: result.msg
+                                });
+                            }
                             if (result.code == "200") {
                                 top.layer.msg('任务移除成功', {icon: 1});
                                 window.setTimeout(that.list(), 1500);

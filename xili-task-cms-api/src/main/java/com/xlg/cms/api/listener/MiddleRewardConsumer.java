@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson.JSON;
 import com.xlg.component.common.RocketContants;
 import com.xlg.component.dto.MessageDTO;
-import com.xlg.component.processor.XlgTaskStatusChangedProcessorStrategy;
+import com.xlg.component.processor.XlgTaskStatusChangedProcessorStrategyFactory;
 import com.xlg.component.utils.ProducerUtils;
 
 /**
@@ -26,7 +26,7 @@ public class MiddleRewardConsumer implements RocketMQListener<MessageDTO> {
     private static final Logger logger = LoggerFactory.getLogger(MiddleRewardConsumer.class);
 
     @Resource
-    private XlgTaskStatusChangedProcessorStrategy xlgTaskStatusChangedProcessorStrategy;
+    private XlgTaskStatusChangedProcessorStrategyFactory xlgTaskStatusChangedProcessorStrategy;
     @Resource
     private ProducerUtils producerUtils;
 
@@ -35,6 +35,7 @@ public class MiddleRewardConsumer implements RocketMQListener<MessageDTO> {
         long targetMills = dto.getTargetMills();
 
         logger.info("[MiddleRewardConsumer] start dto={}", JSON.toJSONString(dto));
+        // 小于，回抛
         if (System.currentTimeMillis() < targetMills) {
             // 轮训处理
             logger.info("[MiddleRewardConsumer] curMills < targetMills, 继续轮训");

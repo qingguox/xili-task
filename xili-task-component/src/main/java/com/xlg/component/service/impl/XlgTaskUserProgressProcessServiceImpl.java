@@ -1,7 +1,12 @@
 package com.xlg.component.service.impl;
 
+import static com.xlg.component.common.TaskConstants.ONE;
+import static com.xlg.component.common.TaskConstants.THREE;
+import static com.xlg.component.enums.XlgTaskCache.TASK_REGISTER;
+
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -10,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
@@ -50,6 +56,8 @@ public class XlgTaskUserProgressProcessServiceImpl implements XlgTaskUserProgres
     private XlgTaskFinishDetailService xlgTaskFinishDetailService;
     @Autowired
     private XlgTaskUserProgressItemService xlgTaskUserProgressItemService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     public void processProgress(XlgTaskUserProgressDTO dto) {
@@ -63,8 +71,15 @@ public class XlgTaskUserProgressProcessServiceImpl implements XlgTaskUserProgres
         long actionTime = dto.getActionTime();
 
         //1. 查看监控是否有，也就是任务是否过期
-        XlgRegister xlgRegister =
-                xlgRegisterService.getByTaskIdAndTimeAndStatus(taskId, actionTime, AllStatusEnum.TACH.getValue());
+        // TODO 查询缓存
+        XlgRegister xlgRegister;
+        String key = TASK_REGISTER.getDesc().concat(String.valueOf(taskId));
+        Object res = redisTemplate.opsForValue().get(key);
+        if (res == null) {
+            xlgRegister = reloadTaskRegisterCache(taskId, actionTime, key);
+        } else {
+            xlgRegister = JSON.parseObject((String) res, XlgRegister.class);
+        }
         //1-1. 没有查询到监控数据，则return 无法完成，过时了
         if (xlgRegister == null) {
             logger.info("[XlgTaskUserProgressProcessServiceImpl] processProgress taskId={}, xlgRegister is detach 失效!",
@@ -168,6 +183,17 @@ public class XlgTaskUserProgressProcessServiceImpl implements XlgTaskUserProgres
             }
         }
         logger.info("[XlgTaskUserProgressProcessServiceImpl] processProgress updateTaskFinishDetail update end !!!");
+    }
+
+    private XlgRegister reloadTaskRegisterCache(long taskId, long actionTime, String key) {
+        XlgRegister xlgRegister =
+                xlgRegisterService.getByTaskIdAndTimeAndStatus(taskId, actionTime, AllStatusEnum.TACH.getValue());
+        if (xlgRegister != null) {
+            //设置的是3s失效，3s之内查询有结果，3s之后返回null
+            redisTemplate.opsForValue().set(key, JSON.toJSONString(xlgRegister), THREE, TimeUnit.SECONDS);
+            redisTemplate.expire(key, ONE, TimeUnit.DAYS);
+        }
+        return xlgRegister;
     }
 
     /**

@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -56,16 +57,14 @@ public class LoginController {
     }
 
     /** 登陆
-     * @param username
-     * @param password
-     * @param captcha
-     * @param rememberMe
      * @return
      */
     @PostMapping("/login")
     @ResponseBody
     public Result login(HttpServletRequest request, String username, String password, String captcha, String rememberMe,
             String role, HttpServletResponse response) throws IOException {
+
+        logger.info("username={}, password={}, ", username, password);
         // 判断账号密码是否为空
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password) || StringUtils.isEmpty(captcha)) {
             return Result.error("账户, 密码, 验证码为null");
@@ -74,7 +73,6 @@ public class LoginController {
             return Result.error("账户必须为自己的工号！并且为数字");
         }
         // 判断用户名，密码是否正确
-
         // 判断验证码是否正确
         HttpSession session = request.getSession();
         String sessionCaptcha = (String) session.getAttribute("captcha");
@@ -88,8 +86,9 @@ public class LoginController {
         token.setUserName(username);
         // TODO md5 加密
         String passwordFromMd5 = password;
-        // String passwordFromMd5 = DigestUtils.md5DigestAsHex(password.getBytes());
+        passwordFromMd5 = DigestUtils.md5DigestAsHex(password.getBytes());
         AllStatusEnum hasUser = xlgUserService.hasUser(Long.parseLong(username), passwordFromMd5);
+        logger.info("hasUser={}", JSON.toJSONString(hasUser));
         if (hasUser == AllStatusEnum.UNKNOWN || hasUser == AllStatusEnum.TACH) {
             return Result.error(hasUser.thirdDesc);
         }
@@ -178,6 +177,12 @@ public class LoginController {
         }
         System.out.println(code + errorMsg);
         return "error";
+    }
+
+    public static void main(String[] args) {
+        String password = "23134234";
+        String s = DigestUtils.md5DigestAsHex(password.getBytes());
+        System.out.println(s);
     }
 
 

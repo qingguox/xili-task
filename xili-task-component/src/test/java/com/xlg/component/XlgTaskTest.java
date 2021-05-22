@@ -1,10 +1,17 @@
 package com.xlg.component;
 
+import javax.annotation.Resource;
+
+import org.junit.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
+
 /**
  * @author wangqingwei <wangqingwei@kuaishou.com>
  * Created on 2021-03-03
  */
-public class Test {
+@SpringBootTest
+public class XlgTaskTest {
 
 //    @org.junit.jupiter.api.Test
 //    void generator() {
@@ -27,5 +34,12 @@ public class Test {
 //        }
 //    }
 
+    @Resource(name = "redisTemplate")
+    private RedisTemplate redisTemplate;
+
+    @Test
+    public void redisTest() {
+
+    }
 
 }

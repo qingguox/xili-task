@@ -18,7 +18,7 @@ public class TemplateStoreFileUtil {
     private static final Logger logger = LoggerFactory.getLogger(TemplateStoreFileUtil.class);
 
     /**
-     * 功能描述: 下载文件
+     * download file
      */
     public static final void download(HttpServletResponse response, byte[] datas, String fileName, String fileType)
             throws IOException {

@@ -1,5 +1,8 @@
 package com.xlg.cms.api.controller;
 
+import static com.xlg.cms.api.utils.MetricUtil.increaseUploadCount;
+import static com.xlg.cms.api.utils.MetricUtil.increaseUploadTime;
+
 import javax.annotation.Resource;
 
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -10,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSON;
-import com.xlg.component.common.RocketContants;
 import com.xlg.component.dto.MessageDTO;
 import com.xlg.component.enums.TaskType;
 import com.xlg.component.utils.ProducerUtils;
@@ -27,7 +29,9 @@ public class ProducerController {
 
     @GetMapping("/rmqsend")
     public String send(String msg) {
-        rocketMQTemplate.convertAndSend(RocketContants.TEST_TOPIC,msg);
+//        rocketMQTemplate.convertAndSend(RocketContants.TEST_TOPIC,msg);
+        increaseUploadCount("111");
+        increaseUploadTime("111", 22);
         return "success";
     }
 

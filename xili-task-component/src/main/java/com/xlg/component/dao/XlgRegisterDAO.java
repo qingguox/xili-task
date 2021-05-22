@@ -63,4 +63,12 @@ public class XlgRegisterDAO {
                 namedParameterJdbcTemplate.query(sql, source, new BeanPropertyRowMapper<>(XlgRegister.class));
         return CollectionUtils.isNotEmpty(registerList) ? registerList.get(0) : null;
     }
+
+    public XlgRegister getByTaskId(long taskId) {
+        String sql = "select * from " + table + " where task_id=:taskId";
+        List<XlgRegister> registerList =
+                namedParameterJdbcTemplate.query(sql, new MapSqlParameterSource("taskId", taskId),
+                        new BeanPropertyRowMapper<>(XlgRegister.class));
+        return CollectionUtils.isNotEmpty(registerList) ? registerList.get(0) : new XlgRegister();
+    }
 }

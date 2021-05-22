@@ -1,5 +1,6 @@
 package com.xlg.cms.api.controller.manager;
 
+import static com.xlg.component.common.TaskConstants.INIT_WITHOUT_PASSWORD;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.io.ByteArrayOutputStream;
@@ -61,9 +62,8 @@ import com.xlg.component.service.XlgUserService;
 @Controller
 @RequestMapping("/manager")
 public class ManagerController {
-
-
     private static final Logger logger = LoggerFactory.getLogger(ManagerController.class);
+
 
     @Autowired
     private XlgUserService xlgUserService;
@@ -77,6 +77,17 @@ public class ManagerController {
     public String page(Model model) {
         model.addAttribute("isCaptcha", true);
         return "manager";
+    }
+
+    /**
+     * 页面跳转
+     * @param
+     * @return
+     */
+    @RequestMapping("/monitor")
+    public void monitor(Model model, HttpServletResponse response) throws IOException {
+        model.addAttribute("isCaptcha", true);
+        response.sendRedirect("http://qingguox.xyz:3000/d/YIJNsWjMk/node-exporter-server-metrics1?orgId=1");
     }
 
     /**
@@ -285,7 +296,7 @@ public class ManagerController {
 
             long now = System.currentTimeMillis();
             XlgUserExtParams xlgUserExtParams = new XlgUserExtParams();
-            xlgUserExtParams.setPasswordFromMd5(DigestUtils.md5DigestAsHex("666666".getBytes()));
+            xlgUserExtParams.setPasswordFromMd5(DigestUtils.md5DigestAsHex(INIT_WITHOUT_PASSWORD.getBytes()));
             XlgUser user = new XlgUser();
             user.setUserId(userId);
             user.setName(name);

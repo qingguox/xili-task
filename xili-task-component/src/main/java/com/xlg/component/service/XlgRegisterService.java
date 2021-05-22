@@ -20,4 +20,6 @@ public interface XlgRegisterService {
      * @return
      */
     XlgRegister getByTaskIdAndTimeAndStatus(long taskId, long actionTime, int value);
+
+    XlgRegister getByTaskId(long taskId);
 }

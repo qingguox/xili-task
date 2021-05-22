@@ -1,5 +1,6 @@
 package com.xlg.cms.api.filter;
 
+import static com.xlg.component.enums.AllStatusEnum.DETACH;
 import static com.xlg.component.enums.RoleEnum.MANAGER;
 import static com.xlg.component.enums.RoleEnum.STUDENT;
 import static com.xlg.component.enums.RoleEnum.TEACHER;
@@ -25,11 +26,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.DigestUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.xlg.cms.api.utils.CookieUtils;
+import com.xlg.component.enums.AllStatusEnum;
 import com.xlg.component.service.XlgUserService;
 
 /**
@@ -42,8 +45,11 @@ public class LoginFilter implements Filter {
     private static Set<String> SUPPORT_URLS = Sets.newHashSet("task", "teacher", "manager", "student");
     private static Set<String> NOT_SUPPORT_URLS =
             Sets.newHashSet("/login.html", "/logout", "/error", "/error/", "/captcha", "/login", "/js/**",
-                    "/html/**", "/image/**", "/css/**", "/rmqsend", "/file");
+                    "/html/**", "/image/**", "/css/**", "/rmqsend", "/file", "/actuator/prometheus");
     private static Map<Integer, List<String>> roleUrlMap = Maps.newHashMap();
+
+    @Autowired
+    private XlgUserService xlgUserService;
 
     static {
         roleUrlMap.put(TEACHER.value, Lists.newArrayList("/teacher*"));
@@ -53,12 +59,9 @@ public class LoginFilter implements Filter {
 
     @Value("${constant.cookies.prefix.user}")
     private String COOKIE_PREFIX_USER;
-
     @Value("${constant.cookies.prefix.role}")
     private String COOKIE_PREFIX_ROLE;
 
-    @Autowired
-    private XlgUserService xlgUserService;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -72,16 +75,6 @@ public class LoginFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String path = request.getRequestURI().substring(request.getContextPath().length()).replaceAll("[/]+$", "");
-        //        if (NOT_SUPPORT_URLS.contains(path)) {
-        //            chain.doFilter(request, response);
-        //            return ;
-        //        }
-        //        String[] split = path.split("/");
-        //        System.out.println(Arrays.toString(split));
-        //        System.out.println(path);
-        //        path = split[1];
-        //        System.out.println(path);
-        //        boolean needUrl = SUPPORT_URLS.contains(path);
         if (!NOT_SUPPORT_URLS.contains(path)) {
             //            System.out.println("需要校验。=needUrl{},+" + needUrl + path);
             //对request、response进行一些预处理
@@ -112,6 +105,12 @@ public class LoginFilter implements Filter {
                         role = Integer.parseInt(cookie2.getValue());
                     }
                     // TODO 查询数据库是否存在用户
+                    String passwordFromMd5 = password;
+                    passwordFromMd5 = DigestUtils.md5DigestAsHex(password.getBytes());
+                    AllStatusEnum hasUser = xlgUserService.hasUser(Long.parseLong(username), passwordFromMd5);
+                    if (hasUser != DETACH) {
+                        response.setHeader("refresh", "0;URL=/login.html");
+                    }
                     // 获得就是md5 加密密码，此处无需加密
                     if (username != null) {
                         request.getSession().setAttribute("user",

@@ -1,5 +1,7 @@
 package com.xlg.component.processor;
 
+import static com.xlg.component.enums.XlgTaskCache.TASK_REGISTER;
+
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -7,6 +9,7 @@ import javax.annotation.Resource;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
@@ -36,6 +39,8 @@ public class XlgTaskFinishedProcessor implements XlgTaskStatusChangedProcessor {
     private XlgTaskUserProgressService xlgTaskUserProgressService;
     @Resource
     private XlgRegisterService xlgRegisterService;
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Override
     public boolean support(TaskType taskType) {
@@ -78,6 +83,10 @@ public class XlgTaskFinishedProcessor implements XlgTaskStatusChangedProcessor {
             logger.info("[XlgTaskFinishedProcessor] 修改监控无效, taskId={}, dto={}", taskId, JSON.toJSONString(dto));
             return;
         }
+        // 使监控缓存失效
+        String key = TASK_REGISTER.getDesc().concat(String.valueOf(taskId));
+        redisTemplate.delete(key);
+        logger.info("[XlgTaskFinishedProcessor] delete redis key={}", key);
         logger.info("[XlgTaskFinishedProcessor] 修改监控成功, taskId={}", taskId);
     }
 }

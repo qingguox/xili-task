@@ -45,6 +45,9 @@
             <Form-item label="邮箱" prop="email" >
                 <i-input  v-model="formQuartz.email" :value.sync="formQuartz.email" ></i-input>
             </Form-item>
+            <Form-item label="密码" prop="password" >
+                <i-input  v-model="formQuartz.password" :value.sync="formQuartz.password" ></i-input>
+            </Form-item>
 
             <div v-for="(item, index) in form.dynamicItem" :key="index">
                 <div style="height: 50px; width: 500px;box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)">
@@ -87,6 +90,7 @@
                 type: "",
                 phone: "",
                 email: "",
+                password: ""
             },
             ruleValidate: {
                 userId: [
@@ -159,17 +163,24 @@
                     data: {
                     },
                     success: function (result) {
-                        vm.formQuartz = result.msg;
-                    },
-                    error: function () {
-                        let code = 401
-                        let msg = "很抱歉，您没有权限！！！"
+                        let code = result.code;
+                        let msg = result.msg;
                         if (code == 401) {
                             vm.$Notice.error({
                                 desc:  msg
                             });
-                            window.location.href = "task/index.html"
+                            //window.location.href = "task/index.html"
+                        } else {
+                            vm.formQuartz = result.msg;
                         }
+                    },
+                    error: function (result) {
+                        let code = result.code;
+                        let msg = result.msg;
+                        vm.$Notice.error({
+                            desc:  "没有权限!!"
+                        });
+                            // window.location.href = "task/index.html"
                     }
                 });
             },
@@ -187,7 +198,8 @@
                     "sex": quartz.sex,
                     "type": quartz.type,
                     "phone": quartz.phone,
-                    "email": quartz.email
+                    "email": quartz.email,
+                    "password": quartz.password
                 };
                 $.ajax({
                     url:"../student/task/user/edit",
@@ -196,8 +208,11 @@
                     contentType:'application/json;charset=UTF-8',
                     data: JSON.stringify(json),
                     success: function(result) {
-                        if(result.code=="200"){
-                            window.parent.location.reload();
+                        if(result.code == 200){
+                            vm.$Notice.success({
+                                desc: result.msg
+                            });
+                            //window.parent.location.reload();
                             //$(window.parent.document).contents().find('#app')[0].contentWindow.vm.load();
                         }else{
                             vm.$Notice.error({

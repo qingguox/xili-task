@@ -69,7 +69,7 @@ public class XlgUserDAO {
     }
 
     public int update(XlgUser user) {
-        String sql = "update " + table + " set user_id=:userId,name=:name,age=:age,sex=:sex,type=:type,phone=:phone,email=:email where id=:id";
+        String sql = "update " + table + " set user_id=:userId,name=:name,age=:age,sex=:sex,type=:type,phone=:phone,email=:email,ext_params=:extParams where id=:id";
         return namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource()
                 .addValue("id", user.getId())
                 .addValue("userId", user.getUserId())
@@ -79,6 +79,7 @@ public class XlgUserDAO {
                 .addValue("type", user.getType())
                 .addValue("phone", user.getPhone())
                 .addValue("email", user.getEmail())
+                .addValue("extParams", user.getExtParams())
         );
     }
 
