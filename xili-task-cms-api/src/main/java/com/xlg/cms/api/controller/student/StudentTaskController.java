@@ -155,7 +155,7 @@ public class StudentTaskController {
 
         List<StudentTask> result = creatorList.stream().map(cur -> {
             model.setCreateId(cur.getUserId());
-            return progressInner(model, adminId, finished);
+            return progressInner(model, adminId, finished, page);
         }).flatMap(Collection::stream).collect(Collectors.toList());
         int total = result.size();
         List<StudentTask> studentTasks = PageUtils.getTaskListByPage(result, page);
@@ -164,16 +164,18 @@ public class StudentTaskController {
 
 
     private Result progress(Page page, XlgTask model, long curUserId, int finished) {
-        List<StudentTask> list = progressInner(model, curUserId, finished);
+        List<StudentTask> list = progressInner(model, curUserId, finished, page);
         int total = list.size();
         List<StudentTask> studentTasks = PageUtils.getTaskListByPage(list, page);
+        logger.info("list={}", JSON.toJSONString(list));
         return Result.ok(total, studentTasks);
     }
 
-    private List<StudentTask> progressInner(XlgTask model, long curUserId, int finished) {
-        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(new Page(), model);
+    private List<StudentTask> progressInner(XlgTask model, long curUserId, int finished, Page page) {
+        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(page, model);
         Set<Long> taskIds = tasks.stream().map(XlgTask::getId).collect(Collectors.toSet());
 
+        logger.info("tasks={}", JSON.toJSONString(taskIds));
         //1. 获取当前用户的所有进度，然后反查任务
         List<XlgTaskUserProgress> progressList = xlgTaskUserProgressService.getProgressListByUserId(taskIds, curUserId);
         if (CollectionUtils.isEmpty(progressList)) {
@@ -183,6 +185,7 @@ public class StudentTaskController {
         List<Long> taskIdList =
                 progressList.stream().map(XlgTaskUserProgress::getTaskId).distinct().collect(Collectors.toList());
 
+        logger.info("taskIdList={}", JSON.toJSONString(taskIdList));
         // 2. 多次Id -> 一次
         List<XlgTask> taskList = tasks.stream().filter(cur -> taskIdList.contains(cur.getId())).collect(Collectors.toList());
         Map<Long, XlgTask> idTaskMap = taskList.stream().collect(Collectors.toMap(XlgTask::getId, Function.identity()));
@@ -369,7 +372,6 @@ public class StudentTaskController {
 
     /**
      * 去完成任务
-     * @return
      */
     @PostMapping("/todo")
     @ResponseBody

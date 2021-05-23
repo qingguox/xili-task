@@ -376,9 +376,9 @@
                     type: "post",
                     data: {'time': (new Date()).toString(), 'pageNo': this.pageNo, 'pageSize': this.pageSize},
                     success: function (result) {
-                        if (code == 401) {
+                        if (result.code == 401) {
                             vm.$Notice.error({
-                                desc:  msg
+                                desc:  result.msg
                             });
                             //window.location.href = "task/index.html"
                         }

@@ -131,6 +131,11 @@ public class ManagerController {
     @RequestMapping("/edit")
     @ResponseBody
     public Result edit(@RequestBody XlgUserDTO xlgUserDTO) {
+        XlgUser request = new XlgUser();
+        request.setId(xlgUserDTO.getId());
+        request.setUserId(xlgUserDTO.getUserId());
+        XlgUser xlgUser = xlgUserService.getAllTaskByPage(new Page(1, 1), request).stream().findFirst().orElse(null);
+
         XlgUser user = new XlgUser();
         user.setAge(xlgUserDTO.getAge());
         user.setEmail(xlgUserDTO.getEmail());
@@ -141,6 +146,14 @@ public class ManagerController {
         user.setUserId(xlgUserDTO.getUserId());
         user.setUpdateTime(System.currentTimeMillis());
         user.setType(RoleEnum.valueOfDesc(xlgUserDTO.getType()).value);
+        String password = xlgUserDTO.getPassword();
+        if (StringUtils.isBlank(password)) {
+            user.setExtParams(xlgUser.getExtParams());
+        } else {
+            XlgUserExtParams xlgUserExtParams = new XlgUserExtParams();
+            xlgUserExtParams.setPasswordFromMd5(DigestUtils.md5DigestAsHex(password.getBytes()));
+            user.setExtParams(JSON.toJSONString(xlgUserExtParams));
+        }
         System.out.println(user.toString());
         int count = xlgUserService.update(user);
         if (count > 0) {

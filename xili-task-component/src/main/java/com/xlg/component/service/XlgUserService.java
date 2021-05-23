@@ -25,4 +25,7 @@ public interface XlgUserService {
     long formatNameToCreateId(String creator);
 
     AllStatusEnum hasUser(long userId, String passwordFromMd5, int roleType);
+
+
+    XlgUser getByUserId(long userId);
 }

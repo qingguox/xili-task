@@ -38,6 +38,11 @@ public class XlgUserServiceImpl implements XlgUserService {
     }
 
     @Override
+    public XlgUser getByUserId(long userId) {
+        return xlgUserDAO.getByUserId(userId);
+    }
+
+    @Override
     public List<XlgUser> getAllTaskByPage(Page page, XlgUser request) {
         int offset = (page.page - 1) * page.count;
         return xlgUserDAO.getAllTaskByPage(request, offset, page.count);
@@ -72,5 +77,6 @@ public class XlgUserServiceImpl implements XlgUserService {
         }
         return AllStatusEnum.DETACH;
     }
+
 
 }

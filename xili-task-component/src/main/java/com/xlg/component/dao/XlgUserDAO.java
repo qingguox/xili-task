@@ -41,6 +41,7 @@ public class XlgUserDAO {
                         .addValue("sex", e.getSex())
                         .addValue("phone", e.getPhone())
                         .addValue("email", e.getEmail())
+                        .addValue("type", e.getType())
                         .addValue("extParams", e.getExtParams())
                         .addValue("createTime", e.getCreateTime())
                         .addValue("updateTime", e.getUpdateTime())

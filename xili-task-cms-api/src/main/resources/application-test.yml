@@ -1,0 +1,151 @@
+server:
+    port: 8082   # web\u5E94\u7528\u670D\u52A1\u7AEF\u53E3
+
+management:
+    endpoints:
+        web:
+            exposure:
+                # 将 Actuator 的 /actuator/prometheus 端点暴露出来
+                include: 'prometheus,health'
+    metrics:
+        tags:
+            # 为指标设置一个Tag，这里设置为应用名，Tag是Prometheus提供的一种能力，从而实现更加灵活的筛选
+            application: ${spring.application.name}
+
+
+spring:
+    thymeleaf:
+        cache: false # 启用缓存:建议生产开启
+
+        check-template-location: true # 检查模版是否存在
+        enabled: true # 是否启用
+        encoding: UTF-8 # 模版编码
+        excluded-view-names: # 应该从解析中排除的视图名称列表（用逗号分隔）
+        mode: HTML5 # 模版模式
+        #        mode: LEGACYHTML5
+        classic_compile: true
+        suffix: .html # 模版后缀
+        prefix: classpath:/templates/ # 模版存放路径
+
+    servlet:
+        multipart:
+            max-file-size:  100MB
+            max-request-size: 1000MB
+
+    jackson:
+        date-format: yyyy-MM-dd HH:mm:ss
+        time-zone: GMT+8
+
+    datasource:
+        url: jdbc:mysql://127.0.0.1:3306/xlgTask?useUnicode=true&characterEncoding=utf-8&useSSL=false
+        username: root
+        password: 123456
+        driver-class-name: com.mysql.jdbc.Driver
+
+    resources:
+        static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,file:${web.upload-path}
+
+    redis:
+        database: 0 # Redis 数据库索引（默认为 0）
+        host: 118.31.103.97 # Redis 服务器地址
+        port: 6379 # Redis 服务器连接端口
+        password: 123456 # Redis 服务器连接密码（默认为空）
+        timeout:  5000  # 连接超时，单位ms
+        lettuce:
+            pool:
+                max-active: 8 # 连接池最大连接数（使用负值表示没有限制） 默认 8
+                max-wait: -1 # 连接池最大阻塞等待时间（使用负值表示没有限制） 默认 -1
+                max-idle: 8 # 连接池中的最大空闲连接 默认 8
+                min-idle: 0 # 连接池中的最小空闲连接 默认 0
+    http:
+        encoding:
+            # 编码集
+            charset: utf-8
+            enabled: true
+    mail:
+        default-encoding: UTF-8
+        #发送邮件的账户
+        username: 1367379258@qq.com
+        # 授权码（获取方式前文已描述）
+        password: yxzxrmzeyqhigdga
+        # （邮箱服务器地址，获取方式前文已描述）
+        # 163 邮箱是smtp.163.com
+        # qq邮箱则为smtp.qq.com
+        host: smtp.11.com
+        properties:
+            mail:
+                smtp:
+                    ssl:
+                        enable: true
+
+web:
+    upload-path: /Users/easy/others/gitPro/xili-task/xili-task-cms-api/src/main/resources/static/upload/
+#    /home/upload/
+
+
+rocketmq:
+    name-server: 118.31.103.97:9876 # 自己的RocketMQ服务地址
+    producer:
+        send-message-timeout: 300000
+        group: launch-group
+
+
+#    freemarker:
+#        cache: false # 缓存配置 开发阶段应该配置为false 因为经常会改
+#        suffix: .html # 模版后缀名 默认为ftl
+#        charset: UTF-8 # 文件编码
+#        template-loader-path: classpath:/templates/
+
+
+
+#    mvc:
+#        view:
+#            suffix: .jsp
+#            prefix: /WEB-INF/jsp/
+
+debug: true
+
+constant:
+    cookies:
+        prefix:
+            user:
+                "cookie_prefix_user"
+            role:
+                "cookie_prefix_role"
+
+
+#
+#primarydb:
+#    uniqueResourceName: primary
+#    xaDataSourceClassName: com.mysql.jdbc.jdbc2.optional.MysqlXADataSource
+#    xaProperties:
+#        url: jdbc:mysql://127.0.0.1/test?
+#        user: root
+#        password: 123456
+#    exclusiveConnectionMode: true
+#    minPoolSize: 3
+#    maxPoolSize: 10
+#    testQuery: SELECT 1 from dual #由于采用HikiriCP，用于检测数据库连接是否存活。
+#
+#secondarydb:
+#    uniqueResourceName: secondary
+#    xaDataSourceClassName: com.mysql.jdbc.jdbc2.optional.MysqlXADataSource
+#    xaProperties:
+#        url: jdbc:mysql://127.0.0.1/test2?
+#        user: root
+#        password: 123456
+#    exclusiveConnectionMode: true
+#    minPoolSize: 3
+#    maxPoolSize: 10
+#    testQuery: SELECT 1 from dual #由于采用HikiriCP，用于检测数据库连接是否存活。
+
+#mybatis:
+#    mapper-locations: classpath:generator/*.xml
+logging:
+    level:
+        com.qw.bootlearn: debug
+
+
+
+
+

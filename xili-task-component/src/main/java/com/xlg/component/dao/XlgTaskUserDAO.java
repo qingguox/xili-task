@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.context.annotation.Lazy;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -44,5 +45,11 @@ public class XlgTaskUserDAO {
         long count =
                 namedParameterJdbcTemplate.queryForObject(sql, new MapSqlParameterSource("taskId", taskId), Long.class);
         return count;
+    }
+
+    public List<XlgTaskUser> getUserByTaskId(long taskId) {
+        String sql = "select * from " + table + " where task_id =:taskId";
+        return namedParameterJdbcTemplate.query(sql, new MapSqlParameterSource("taskId", taskId),
+                new BeanPropertyRowMapper<>(XlgTaskUser.class) );
     }
 }

@@ -30,4 +30,9 @@ public class XlgTaskUserServiceImpl implements XlgTaskUserService {
     public long getUserCountByTaskId(long taskId) {
         return xlgTaskUserDAO.getUserCountByTaskId(taskId);
     }
+
+    @Override
+    public List<XlgTaskUser> getUserByTaskId(long taskId) {
+        return xlgTaskUserDAO.getUserByTaskId(taskId);
+    }
 }

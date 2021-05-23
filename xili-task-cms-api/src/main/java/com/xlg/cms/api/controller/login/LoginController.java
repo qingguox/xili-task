@@ -1,6 +1,7 @@
 package com.xlg.cms.api.controller.login;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import com.xlg.cms.api.model.Result;
 import com.xlg.cms.api.utils.CaptchaUtil;
 import com.xlg.cms.api.utils.CookieUtils;
@@ -181,10 +183,11 @@ public class LoginController {
     }
 
     public static void main(String[] args) {
-        String password = "3170211030";
-        String s = DigestUtils.md5DigestAsHex(password.getBytes());
-        System.out.println(s);
+        List<String> list = Lists.newArrayList("3170211060", "3170241155", "3170911026", "3170911027",
+                "7001408698", "7002400878", "7003300872");
+        list.forEach(cur -> {
+            String s = DigestUtils.md5DigestAsHex(cur.getBytes());
+            System.out.println(s);
+        });
     }
-
-
 }

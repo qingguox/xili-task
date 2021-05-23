@@ -337,7 +337,7 @@ public class TaskController {
         if (!hasAdmin) {
             return Result.ok(401, "没有权限！！！");
         }
-        long createId = 3170211060L;
+        long createId = adminUtils.AdminId(request);
         int taskStatus = 0;
         int userProgressStatus = 0;
         long now = System.currentTimeMillis();

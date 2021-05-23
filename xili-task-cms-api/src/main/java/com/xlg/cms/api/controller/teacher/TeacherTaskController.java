@@ -107,6 +107,7 @@ public class TeacherTaskController {
         Page page = new Page(pageNo, pageSize);
         XlgTask model = new XlgTask();
         model.setCreateId(createId);
+        logger.info("model={}", JSON.toJSONString(model));
         return progress(page, model);
     }
 
@@ -151,7 +152,7 @@ public class TeacherTaskController {
     }
 
     private Result progress(Page page, XlgTask model) {
-        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(new Page(), model);
+        List<XlgTask> tasks = xlgTaskService.getAllTaskByPage(page, model);
         Set<Long> taskIds = tasks.stream().map(XlgTask::getId).collect(Collectors.toSet());
 
         // 根据id 去task——user表找总人数
@@ -166,6 +167,7 @@ public class TeacherTaskController {
             taskIdTOUserFinishedMap.put(curId, userFinished);
         });
 
+        logger.info("taskIds={}", JSON.toJSONString(taskIds));
         List<TeacherTask> taskShowList = tasks.stream().map(task -> {
             List<XlgTaskCondition> conditionList = xlgTaskConditionService.getByTaskId(task.getId());
             List<ConditionInfo> conditionInfoList = Lists.newArrayList();
@@ -199,6 +201,7 @@ public class TeacherTaskController {
         }).sorted(Comparator.comparingLong(TaskShow::getTaskId)).collect(Collectors.toList());
         int total = taskShowList.size();
         List<TeacherTask> taskList = PageUtils.getTaskListByPage(taskShowList, page);
+        logger.info("taskList={}", JSON.toJSONString(taskList));
         return Result.ok(total, taskList);
     }
 

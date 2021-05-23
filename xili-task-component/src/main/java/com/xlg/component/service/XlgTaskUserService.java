@@ -12,4 +12,6 @@ public interface XlgTaskUserService {
     int batchInsert(List<XlgTaskUser> list);
 
     long getUserCountByTaskId(long taskId);
+
+    List<XlgTaskUser> getUserByTaskId(long taskId);
 }
