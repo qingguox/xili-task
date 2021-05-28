@@ -13,7 +13,8 @@
 </head>
 <body class="layui-layout-login">
 <div class="login-bg">
-    <div class="cover"></div>
+    <div class="cover">
+    </div>
 </div>
 <div class="login-content" th:th:classappend="${isCaptcha} ? 'captcha'">
     <h1 class="login-box-title"><i class="fa fa-fw fa-user"></i>登录</h1>
@@ -43,7 +44,18 @@
         </div>
         <button type="submit" class="layui-btn layui-btn-fluid ajax-login"><i class="fa fa-sign-in fa-lg fa-fw"></i> 登录</button>
     </form>
-    <div class="layui-layer-loading login-page-loading"><div class="layui-layer-content"></div></div>
+    <div class="layui-layer-loading login-page-loading"><div class="layui-layer-content"></div>
+    </div>
+    <footer class="main-footer" style=" clear: both;
+            display: block;
+            text-align: center;
+            width: 100%;
+            height: 120px;
+            min-width: 200px;
+            ">
+        <strong style="text-align: center">京ICP备<a href="http://beian.miit.gov.cn">2021016478</a>号</strong> All rights
+        reserved.
+    </footer>
 </div>
 <script th:replace="common/template :: script"></script>
 <script th:src="@{/js/login.js}" charset="utf-8"></script>
